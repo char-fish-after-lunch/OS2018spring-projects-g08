@@ -4,11 +4,8 @@ endif
 
 KERNEL_IMG := $(OBJPATH_ROOT)/kernel.img
 KERNEL_ELF := $(KTREE_OBJ_ROOT)/kernel-$(ARCH).elf
-KERNEL_ELF_RAW := $(KTREE_OBJ_ROOT)/kernel-$(ARCH).elf_raw
 LINK_FILE_IN	:= $(KTREE)/arch/${ARCH}/ucore.ld.in
 LINK_FILE     := $(KTREE_OBJ_ROOT)/arch/$(ARCH)/ucore.ld
-LINK_FILE_MERGE := $(KTREE)/arch/${ARCH}/ucore.merge.ld
-KERNEL_SYM	:= $(KTREE_OBJ_ROOT)/kerne-$(ARCH).sym.elf
 SEDFLAGS	= s/TEXT_START/$(UCONFIG_KERNEL_BASE)/
 
 FSIMG		:= ${T_OBJ}/sfs.img
@@ -57,23 +54,12 @@ $(KERNEL_IMG): $(KERNEL_ELF)
 		&& make && cp bbl $(KERNEL_IMG)
 
 
-$(KERNEL_ELF): $(KERNEL_ELF_RAW) $(KERNEL_SYM)
-	@echo Linking uCore RAW
-
-	$(Q)$(TARGET_LD) $(TARGET_LDFLAGS) -T $(LINK_FILE_MERGE) $(KERNEL_ELF_RAW) $(KERNEL_SYM) -o $@
-
-$(KERNEL_SYM): $(KERNEL_ELF_RAW) $(KTREE_OBJ_ROOT)/sym.S
-	@riscv32-unknown-elf-readelf -x .symtab $(KERNEL_ELF_RAW) | tail -n +3 | sed 's/0x//' | xxd -r -c 16 > $(KTREE_OBJ_ROOT)/symtab.raw
-	@riscv32-unknown-elf-readelf -x .strtab $(KERNEL_ELF_RAW) | tail -n +3 | sed 's/0x//' | xxd -r -c 16 > $(KTREE_OBJ_ROOT)/strtab.raw
-
-	@cd $(KTREE_OBJ_ROOT) && riscv32-unknown-elf-gcc -c -o $(KERNEL_SYM) $(KTREE_OBJ_ROOT)/sym.S
-
 $(KTREE_OBJ_ROOT)/sym.S: $(KTREE)/arch/${ARCH}/sym.S
 	@cp $(KTREE)/arch/${ARCH}/sym.S $(KTREE_OBJ_ROOT)/sym.S
 
-$(KERNEL_ELF_RAW): $(LINK_FILE) $(KERNEL_BUILTIN) $(RAMDISK_OBJ) $(CPRAMDISK_OBJ) $(SWAP_OBJ)
-	@echo Linking uCore RAW
-	$(Q)$(TARGET_LD) $(TARGET_LDFLAGS) -r -T $(LINK_FILE) $(KERNEL_BUILTIN) $(RAMDISK_OBJ) $(CPRAMDISK_OBJ) $(SWAP_OBJ) -o $@
+$(KERNEL_ELF): $(LINK_FILE) $(KERNEL_BUILTIN) $(RAMDISK_OBJ) $(CPRAMDISK_OBJ) $(SWAP_OBJ)
+	@echo Linking uCore
+	$(Q)$(TARGET_LD) $(TARGET_LDFLAGS) -T $(LINK_FILE) $(KERNEL_BUILTIN) $(RAMDISK_OBJ) $(CPRAMDISK_OBJ) $(SWAP_OBJ) -o $@
 
 $(LINK_FILE): $(LINK_FILE_IN) $(KCONFIG_AUTOCONFIG)
 	@echo "creating linker script"
@@ -111,4 +97,4 @@ all: $(KERNEL_IMG)
 FORCE:
 
 clean:
-	rm -f $(KERNEL_ELF) $(LINK_FILE) $(KERNEL_ELF_RAW)
+	rm -f $(KERNEL_ELF) $(LINK_FILE)

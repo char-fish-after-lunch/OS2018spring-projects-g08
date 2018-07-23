@@ -172,10 +172,10 @@ $(SFSIMG_FILE): $(TOOLS_MKSFS) userlib userapp FORCE kmod | $(OBJPATH_ROOT)
 	@cp -r $(TOPDIR)/src/kmod/*.ko $(TOPDIR)/src/kmod/*/*.ko $(TMPSFS)/lib/modules/
 	@cp -r $(OBJPATH_ROOT)/user-ucore/bin $(TMPSFS)
 #ifneq ($(UCORE_TEST),)
-	@cp -r $(OBJPATH_ROOT)/user-ucore/testbin $(TMPSFS)
+#	@cp -r $(OBJPATH_ROOT)/user-ucore/testbin $(TMPSFS)
 #endif
 	@$(Q)$(MAKE) -f $(TOPDIR)/src/user-ucore/Makefile -C $(TOPDIR)/src/user-ucore initial_dir
-	-cp -r $(TOPDIR)/src/user-ucore/_initial/* $(TMPSFS)
+	# -cp -r $(TOPDIR)/src/user-ucore/_initial/* $(TMPSFS)
 	@rm -f $@
 	@dd if=/dev/zero of=$@ bs=1M count=$(UCONFIG_SFS_IMAGE_SIZE) >/dev/null 2>&1
 	@$(TOOLS_MKSFS) $@ $(TMPSFS)
@@ -195,9 +195,9 @@ $(SFSIMG2_FILE): $(TOOLS_MKSFATFS) | $(OBJPATH_ROOT)
 	@echo Making $@
 	@rm -rf $(TMPSFS2)
 	@mkdir -p $(TMPSFS2)
-	@cp $(OBJPATH_ROOT)/user-ucore/bin/* $(TMPSFS2)
+	@cp $(OBJPATH_ROOT)/user-ucore/bin/cp $(TMPSFS2)
 	@rm -f $@
-	@dd if=/dev/zero of=$@ bs=4K count=2048 >/dev/null 2>&1
+	@dd if=/dev/zero of=$@ bs=4K count=32 >/dev/null 2>&1
 	@$(TOOLS_MKSFATFS) $@ $(abspath $(TMPSFS2))
 	@rm -rf $(TMPSFS2)
 

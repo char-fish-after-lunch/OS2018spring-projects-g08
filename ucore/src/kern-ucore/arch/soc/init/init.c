@@ -79,11 +79,6 @@ int kern_init(uintptr_t hartid, uintptr_t good) {
     /* We don't support NUMA. */
 	// mp_init();
 
-    #if defined(ARCH_RISCV64) || defined(ARCH_SOC)
-    kdebug_init();
-    #endif
-
-
 	size_t nr_used_pages_store = nr_used_pages();
 
     assert(myid() == hartid);
