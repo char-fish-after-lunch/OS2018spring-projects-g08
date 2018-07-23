@@ -129,7 +129,7 @@
 #define ELF_AT_BASE						7
 #define ELF_AT_ENTRY					9
 
-#ifdef __UCORE_64__
+#if __UCORE_64__
 #if defined(ARCH_RISCV64)
 #define elf_check_arch(x) \
 	(((x)->e_machine == EM_RISCV))
@@ -202,73 +202,6 @@ struct symtab_s {
 	uint64_t st_size;
 };
 
-#define GET_RELOC_SYM(i) ((i)>>32)
-#define GET_RELOC_TYPE(i) ((i)&0xffffffff)
-#define R_X86_64_NONE           0	/* No reloc */
-#define R_X86_64_64             1	/* Direct 64 bit  */
-#define R_X86_64_PC32           2	/* PC relative 32 bit signed */
-#define R_X86_64_GOT32          3	/* 32 bit GOT entry */
-#define R_X86_64_PLT32          4	/* 32 bit PLT address */
-#define R_X86_64_COPY           5	/* Copy symbol at runtime */
-#define R_X86_64_GLOB_DAT       6	/* Create GOT entry */
-#define R_X86_64_JUMP_SLOT      7	/* Create PLT entry */
-#define R_X86_64_RELATIVE       8	/* Adjust by program base */
-#define R_X86_64_GOTPCREL       9	/* 32 bit signed pc relative
-					   offset to GOT */
-#define R_X86_64_32             10	/* Direct 32 bit zero extended */
-#define R_X86_64_32S            11	/* Direct 32 bit sign extended */
-#define R_X86_64_16             12	/* Direct 16 bit zero extended */
-#define R_X86_64_PC16           13	/* 16 bit sign extended pc relative */
-#define R_X86_64_8              14	/* Direct 8 bit sign extended  */
-#define R_X86_64_PC8            15	/* 8 bit sign extended pc relative */
-
-#define R_X86_64_NUM            16
-
-
-#define R_RISCV_NONE            0
-#define R_RISCV_32              1
-#define R_RISCV_64              2
-#define R_RISCV_RELATIVE                3
-#define R_RISCV_COPY            4
-#define R_RISCV_JUMP_SLOT               5
-#define R_RISCV_TLS_DTPMOD32            6
-#define R_RISCV_TLS_DTPMOD64            7
-#define R_RISCV_TLS_DTPREL32            8
-#define R_RISCV_TLS_DTPREL64            9
-#define R_RISCV_TLS_TPREL32             10
-#define R_RISCV_TLS_TPREL64             11
-#define R_RISCV_BRANCH          16
-#define R_RISCV_JAL             17
-#define R_RISCV_CALL            18
-#define R_RISCV_CALL_PLT                19
-#define R_RISCV_GOT_HI20                20
-#define R_RISCV_TLS_GOT_HI20            21
-#define R_RISCV_TLS_GD_HI20             22
-#define R_RISCV_PCREL_HI20              23
-#define R_RISCV_PCREL_LO12_I            24
-#define R_RISCV_PCREL_LO12_S            25
-#define R_RISCV_HI20            26
-#define R_RISCV_LO12_I          27
-#define R_RISCV_LO12_S          28
-#define R_RISCV_TPREL_HI20              29
-#define R_RISCV_TPREL_LO12_I            30
-#define R_RISCV_TPREL_LO12_S            31
-#define R_RISCV_TPREL_ADD               32
-#define R_RISCV_ADD8            33
-#define R_RISCV_ADD16           34
-#define R_RISCV_ADD32           35
-#define R_RISCV_ADD64           36
-#define R_RISCV_SUB8            37
-#define R_RISCV_SUB16           38
-#define R_RISCV_SUB32           39
-#define R_RISCV_SUB64           40
-#define R_RISCV_GNU_VTINHERIT           41
-#define R_RISCV_GNU_VTENTRY             42
-#define R_RISCV_ALIGN           43
-#define R_RISCV_RVC_BRANCH              44
-#define R_RISCV_RVC_JUMP                45
-#define R_RISCV_RELAX	51
-
 
 #else /* __UCORE_64__ not defined */
 
@@ -276,6 +209,9 @@ struct symtab_s {
 #ifdef ARCH_ARM
 #define elf_check_arch(x) \
     (((x)->e_machine == EM_ARM))
+#elif defined(ARCH_SOC)
+#define elf_check_arch(x) \
+	(((x)->e_machine == EM_RISCV))
 #else
 #define elf_check_arch(x) \
 	(((x)->e_machine == EM_386) || ((x)->e_machine == EM_486))
@@ -372,6 +308,75 @@ struct symtab_s {
 #define R_ARM_PREL31            42
 #define R_ARM_MOVW_ABS_NC       43
 #define R_ARM_MOVT_ABS          44
+
+
+
+#define GET_RELOC_SYM(i) ((i)>>32)
+#define GET_RELOC_TYPE(i) ((i)&0xffffffff)
+#define R_X86_64_NONE           0	/* No reloc */
+#define R_X86_64_64             1	/* Direct 64 bit  */
+#define R_X86_64_PC32           2	/* PC relative 32 bit signed */
+#define R_X86_64_GOT32          3	/* 32 bit GOT entry */
+#define R_X86_64_PLT32          4	/* 32 bit PLT address */
+#define R_X86_64_COPY           5	/* Copy symbol at runtime */
+#define R_X86_64_GLOB_DAT       6	/* Create GOT entry */
+#define R_X86_64_JUMP_SLOT      7	/* Create PLT entry */
+#define R_X86_64_RELATIVE       8	/* Adjust by program base */
+#define R_X86_64_GOTPCREL       9	/* 32 bit signed pc relative
+					   offset to GOT */
+#define R_X86_64_32             10	/* Direct 32 bit zero extended */
+#define R_X86_64_32S            11	/* Direct 32 bit sign extended */
+#define R_X86_64_16             12	/* Direct 16 bit zero extended */
+#define R_X86_64_PC16           13	/* 16 bit sign extended pc relative */
+#define R_X86_64_8              14	/* Direct 8 bit sign extended  */
+#define R_X86_64_PC8            15	/* 8 bit sign extended pc relative */
+
+#define R_X86_64_NUM            16
+
+
+#define R_RISCV_NONE            0
+#define R_RISCV_32              1
+#define R_RISCV_64              2
+#define R_RISCV_RELATIVE                3
+#define R_RISCV_COPY            4
+#define R_RISCV_JUMP_SLOT               5
+#define R_RISCV_TLS_DTPMOD32            6
+#define R_RISCV_TLS_DTPMOD64            7
+#define R_RISCV_TLS_DTPREL32            8
+#define R_RISCV_TLS_DTPREL64            9
+#define R_RISCV_TLS_TPREL32             10
+#define R_RISCV_TLS_TPREL64             11
+#define R_RISCV_BRANCH          16
+#define R_RISCV_JAL             17
+#define R_RISCV_CALL            18
+#define R_RISCV_CALL_PLT                19
+#define R_RISCV_GOT_HI20                20
+#define R_RISCV_TLS_GOT_HI20            21
+#define R_RISCV_TLS_GD_HI20             22
+#define R_RISCV_PCREL_HI20              23
+#define R_RISCV_PCREL_LO12_I            24
+#define R_RISCV_PCREL_LO12_S            25
+#define R_RISCV_HI20            26
+#define R_RISCV_LO12_I          27
+#define R_RISCV_LO12_S          28
+#define R_RISCV_TPREL_HI20              29
+#define R_RISCV_TPREL_LO12_I            30
+#define R_RISCV_TPREL_LO12_S            31
+#define R_RISCV_TPREL_ADD               32
+#define R_RISCV_ADD8            33
+#define R_RISCV_ADD16           34
+#define R_RISCV_ADD32           35
+#define R_RISCV_ADD64           36
+#define R_RISCV_SUB8            37
+#define R_RISCV_SUB16           38
+#define R_RISCV_SUB32           39
+#define R_RISCV_SUB64           40
+#define R_RISCV_GNU_VTINHERIT           41
+#define R_RISCV_GNU_VTENTRY             42
+#define R_RISCV_ALIGN           43
+#define R_RISCV_RVC_BRANCH              44
+#define R_RISCV_RVC_JUMP                45
+#define R_RISCV_RELAX	51
 
 
 #endif /* __UCORE_64__ */

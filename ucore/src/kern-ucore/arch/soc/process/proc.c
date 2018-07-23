@@ -4,7 +4,11 @@
 #include <string.h>
 #include <types.h>
 #include <stdlib.h>
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
+#include <smp.h>
+#else
 #include <mp.h>
+#endif
 #include <memlayout.h>
 
 void forkret(void);
@@ -94,12 +98,12 @@ int kernel_execve(const char *name, const char **argv, const char **kenvp)
     }
     asm volatile(
         "li a0, %1\n"
-        "ld a1, %2\n"
-        "ld a2, %3\n"
-        "ld a3, %4\n"
+        "lw a1, %2\n"
+        "lw a2, %3\n"
+        "lw a3, %4\n"
         "li a7, 20\n"
         "ecall\n"
-        "sd a0, %0"
+        "sw a0, %0"
         : "=m"(ret)
         : "i"(SYS_exec), "m"(name), "m"(argv), "m"(kenvp)
         : "memory");

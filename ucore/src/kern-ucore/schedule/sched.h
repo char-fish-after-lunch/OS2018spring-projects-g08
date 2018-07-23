@@ -54,7 +54,9 @@ struct sched_class {
 	// dealer of the time-tick
 	void (*proc_tick) (struct run_queue * rq, struct proc_struct * proc);
     // get load (big means cpu have a lot of jobs to do)
+	#ifndef ARCH_SOC
     double (*get_load) (struct run_queue * rq);
+	#endif
     /* ge]t some proc
 	 *  get some proc from this rq, used in load_balance,
 	 *  return value is the num of gotten proc

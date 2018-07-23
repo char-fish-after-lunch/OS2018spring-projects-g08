@@ -7,7 +7,11 @@
 #include <vmm.h>
 #include <sched.h>
 #include <kio.h>
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
+#include <smp.h>
+#else
 #include <mp.h>
+#endif
 
 //#define SIGQUEUE
 

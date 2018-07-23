@@ -34,7 +34,7 @@
 // |  PPN[2] | PPN[1] | PPN[0] |Reserved|D|A|G|U|X|W|R|V|
 // +---------+----+---+--------+--------+---------------+
 
-#define SATP_SV39 0x8000000000000000 // Sv39
+#define SATP_SV39 0x80000 // Sv39
 
 #define PTE_SIZE 8 // One PTE is 8 bytes
 

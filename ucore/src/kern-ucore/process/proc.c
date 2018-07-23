@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <smp.h>
 #include <resource.h>
-#ifndef ARCH_RISCV64
+#if !defined(ARCH_RISCV64) && !defined(ARCH_SOC)
 #include <sysconf.h>
 #endif
 #include <refcache.h>
@@ -791,7 +791,7 @@ map_ph(int fd, struct proghdr *ph, struct mm_struct *mm, uint32_t * pbias,
 	if (vm_flags & VM_WRITE)
 		ptep_set_u_write(&perm);
 
-#ifdef ARCH_RISCV64
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
 	// modify the perm bits here for RISC-V
 	if (vm_flags & VM_READ) perm |= PTE_R;
 	if (vm_flags & VM_WRITE) perm |= (PTE_W | PTE_R);
@@ -1918,7 +1918,7 @@ int do_shmem(uintptr_t * addr_store, size_t len, uint32_t mmap_flags)
 	if (mmap_flags & MMAP_STACK)
 		vm_flags |= VM_STACK;
 
-#ifdef ARCH_RISCV64
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
 	if (mmap_flags & MMAP_WRITE)
 		vm_flags |= VM_WRITE | VM_READ;
 #endif

@@ -75,7 +75,7 @@ int kern_init(uintptr_t hartid, uintptr_t good) {
     /* We don't support NUMA. */
 	// mp_init();
 
-    #ifdef ARCH_RISCV64
+    #if defined(ARCH_RISCV64) || defined(ARCH_SOC)
     kdebug_init();
     #endif
 

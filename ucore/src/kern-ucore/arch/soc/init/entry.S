@@ -8,7 +8,7 @@
 # necessary memory mapping to switch to the higher address.
 # The value of KCODE must match the definitions in kernel.h and kernel.ld.
 
-#define KBASE 0xFFFFFFC000000000
+#define KBASE 0xf0000
 
 # PADDR(x) is the physical memory address corresponding to x.
 # Until we set up the memory map, fairly late in this file, we have to

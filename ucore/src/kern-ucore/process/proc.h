@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <sem.h>
 #include <event.h>
-#ifdef ARCH_RISCV64
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
 #include <smp.h>
 #else
 #include <mp.h>
@@ -110,7 +110,7 @@ struct linux_timespec {
 #define le2proc(le, member)         \
   to_struct((le), struct proc_struct, member)
 
-#ifdef ARCH_RISCV64
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
 #define current (mycpu()->proc)
 #define idleproc (mycpu()->idle)
 #else

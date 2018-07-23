@@ -956,7 +956,7 @@ int do_pgfault(struct mm_struct *mm, machine_word_t error_code, uintptr_t addr)
 	if (vma->vm_flags & VM_WRITE) {
 		ptep_set_u_write(&perm);
 	}
-#ifdef ARCH_RISCV64
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
 	if (vma->vm_flags & VM_EXEC) {
 		perm |= PTE_X;
 	}

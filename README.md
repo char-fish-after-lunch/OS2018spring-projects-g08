@@ -1,5 +1,7 @@
-# OS2018spring-projects-g08
-http://os.cs.tsinghua.edu.cn/oscourse/OS2018spring/projects/g08
+# uCat
+
+A uCore OS for System on Cat, ported from the RISC-V 64 version (http://os.cs.tsinghua.edu.cn/oscourse/OS2018spring/projects/g08).
+
 
 
 ## Ucore for risc-v 64bit

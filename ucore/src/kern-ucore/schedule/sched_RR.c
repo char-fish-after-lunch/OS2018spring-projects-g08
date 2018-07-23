@@ -47,9 +47,11 @@ static void RR_proc_tick(struct run_queue *rq, struct proc_struct *proc)
 	}
 }
 
+#ifndef ARCH_SOC
 static double RR_get_load (struct run_queue * rq) {
     return rq->proc_num;
 }
+#endif
 
 static int RR_get_proc(struct run_queue* rq, struct proc_struct* procs_moved[], int needs)
 {
@@ -72,6 +74,8 @@ struct sched_class RR_sched_class = {
 	.dequeue = RR_dequeue,
 	.pick_next = RR_pick_next,
 	.proc_tick = RR_proc_tick,
+	#ifndef ARCH_SOC
     .get_load = RR_get_load,
+	#endif
     .get_proc = RR_get_proc,
 };

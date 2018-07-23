@@ -50,7 +50,11 @@ endif
 
 $(KERNEL_IMG): $(KERNEL_ELF)
 	@echo Making $@
-	cd $(TOPDIR)/../riscv-pk && rm -rf build && mkdir build && cd build && ../configure --prefix=$(RISCV) --host=riscv64-unknown-elf --with-payload=$(KERNEL_ELF) --disable-fp-emulation --enable-logo && make && cp bbl $(KERNEL_IMG)
+	cd $(TOPDIR)/../riscv-pk && rm -rf build && mkdir build && \
+		cd build && ../configure --prefix=$(RISCV) --host=riscv32-unknown-elf \
+		--with-payload=$(KERNEL_ELF) --disable-fp-emulation --enable-logo \
+		CC=riscv32-unknown-elf-gcc \
+		&& make && cp bbl $(KERNEL_IMG)
 
 
 $(KERNEL_ELF): $(KERNEL_ELF_RAW) $(KERNEL_SYM)
@@ -59,10 +63,10 @@ $(KERNEL_ELF): $(KERNEL_ELF_RAW) $(KERNEL_SYM)
 	$(Q)$(TARGET_LD) $(TARGET_LDFLAGS) -T $(LINK_FILE_MERGE) $(KERNEL_ELF_RAW) $(KERNEL_SYM) -o $@
 
 $(KERNEL_SYM): $(KERNEL_ELF_RAW) $(KTREE_OBJ_ROOT)/sym.S
-	@riscv64-unknown-elf-readelf -x .symtab $(KERNEL_ELF_RAW) | tail -n +3 | sed 's/0x//' | xxd -r -c 16 > $(KTREE_OBJ_ROOT)/symtab.raw
-	@riscv64-unknown-elf-readelf -x .strtab $(KERNEL_ELF_RAW) | tail -n +3 | sed 's/0x//' | xxd -r -c 16 > $(KTREE_OBJ_ROOT)/strtab.raw
+	@riscv32-unknown-elf-readelf -x .symtab $(KERNEL_ELF_RAW) | tail -n +3 | sed 's/0x//' | xxd -r -c 16 > $(KTREE_OBJ_ROOT)/symtab.raw
+	@riscv32-unknown-elf-readelf -x .strtab $(KERNEL_ELF_RAW) | tail -n +3 | sed 's/0x//' | xxd -r -c 16 > $(KTREE_OBJ_ROOT)/strtab.raw
 
-	@cd $(KTREE_OBJ_ROOT) && riscv64-unknown-elf-gcc -c -o $(KERNEL_SYM) $(KTREE_OBJ_ROOT)/sym.S
+	@cd $(KTREE_OBJ_ROOT) && riscv32-unknown-elf-gcc -c -o $(KERNEL_SYM) $(KTREE_OBJ_ROOT)/sym.S
 
 $(KTREE_OBJ_ROOT)/sym.S: $(KTREE)/arch/${ARCH}/sym.S
 	@cp $(KTREE)/arch/${ARCH}/sym.S $(KTREE_OBJ_ROOT)/sym.S

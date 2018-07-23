@@ -65,10 +65,12 @@ static void MLFQ_proc_tick(struct run_queue *rq, struct proc_struct *proc)
 	sched_class->proc_tick(proc->rq, proc);
 }
 
+#ifndef ARCH_SOC
 //TODO: use MLFQ
 static double MLFQ_get_load (struct run_queue * rq) {
     return sched_class->get_load(rq);
 }
+#endif
 
 //TODO: use MLFQ
 static int MLFQ_get_proc(struct run_queue* rq, struct proc_struct* procs_moved[], int needs) {
@@ -82,6 +84,8 @@ struct sched_class MLFQ_sched_class = {
 	.dequeue = MLFQ_dequeue,
 	.pick_next = MLFQ_pick_next,
 	.proc_tick = MLFQ_proc_tick,
+#ifndef ARCH_SOC
     .get_load = MLFQ_get_load,
+#endif
     .get_proc = MLFQ_get_proc,
 };

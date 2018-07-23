@@ -19,7 +19,11 @@
 #include <error.h>
 #include <proc.h>
 #include <sched.h>
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
+#include <smp.h>
+#else
 #include <mp.h>
+#endif
 
 void __ucore_wait_self()
 {

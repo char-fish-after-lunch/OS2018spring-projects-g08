@@ -8,7 +8,11 @@
 #include <stdio.h>
 #include <rb_tree.h>
 #include <kio.h>
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
+#include <smp.h>
+#else
 #include <mp.h>
+#endif
 #include <spinlock.h>
 
 /*

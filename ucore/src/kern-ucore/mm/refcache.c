@@ -21,7 +21,11 @@
 #include <sysconf.h>
 #include <kio.h>
 #include <wait.h>
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
+#include <smp.h>
+#else
 #include <mp.h>
+#endif
 #include <sync.h>
 #include <proc.h>
 #include <string.h>

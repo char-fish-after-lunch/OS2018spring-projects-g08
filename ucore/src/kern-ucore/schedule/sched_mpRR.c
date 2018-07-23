@@ -47,9 +47,11 @@ static void MPRR_proc_tick(struct run_queue *rq, struct proc_struct *proc)
 	}
 }
 
+#ifndef ARCH_SOC
 static double MPRR_get_load (struct run_queue * rq) {
     return rq->proc_num;
 }
+#endif
 
 static int MPRR_get_proc(struct run_queue* rq, struct proc_struct* procs_moved[], int needs)
 {
@@ -73,6 +75,8 @@ struct sched_class MPRR_sched_class = {
 	.dequeue = MPRR_dequeue,
 	.pick_next = MPRR_pick_next,
 	.proc_tick = MPRR_proc_tick,
+#ifndef ARCH_SOC
     .get_load = MPRR_get_load,
+#endif
     .get_proc = MPRR_get_proc,
 };

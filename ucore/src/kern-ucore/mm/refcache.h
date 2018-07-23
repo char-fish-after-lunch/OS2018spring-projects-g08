@@ -19,7 +19,11 @@
 #define __MM_REFCACHE_H
 
 #include <arch.h>
+#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
+#include <smp.h>
+#else
 #include <mp.h>
+#endif
 #include <list.h>
 #include <memlayout.h>
 #include <atomic.h>
