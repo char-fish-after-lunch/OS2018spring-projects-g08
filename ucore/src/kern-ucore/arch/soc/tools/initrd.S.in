@@ -1,0 +1,2 @@
+.section .initrd
+.incbin "DATA_FILE"

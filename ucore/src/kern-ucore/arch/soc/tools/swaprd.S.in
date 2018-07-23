@@ -1,0 +1,2 @@
+.section .swaprd
+.incbin "SWAP_FILE"

@@ -1,0 +1,110 @@
+ifneq ($(MAKECMDGOALS),clean)
+include $(KCONFIG_AUTOCONFIG)
+endif
+
+KERNEL_IMG := $(OBJPATH_ROOT)/kernel.img
+KERNEL_ELF := $(KTREE_OBJ_ROOT)/kernel-$(ARCH).elf
+KERNEL_ELF_RAW := $(KTREE_OBJ_ROOT)/kernel-$(ARCH).elf_raw
+LINK_FILE_IN	:= $(KTREE)/arch/${ARCH}/ucore.ld.in
+LINK_FILE     := $(KTREE_OBJ_ROOT)/arch/$(ARCH)/ucore.ld
+LINK_FILE_MERGE := $(KTREE)/arch/${ARCH}/ucore.merge.ld
+KERNEL_SYM	:= $(KTREE_OBJ_ROOT)/kerne-$(ARCH).sym.elf
+SEDFLAGS	= s/TEXT_START/$(UCONFIG_KERNEL_BASE)/
+
+FSIMG		:= ${T_OBJ}/sfs.img
+export DATA_FILE ?= $(FSIMG)
+
+CP_FSIMG	:= ${T_OBJ}/sfs_cp.img
+export CP_DATA_FILE ?= ${CP_FSIMG}
+
+__CMD := case sfs.img in /*) echo 1;; esac
+ifeq ($(shell $(__CMD)), 1)
+RAMDISK_FILE := $(shell echo sfs.img)
+else
+RAMDISK_FILE := $(OBJPATH_ROOT)/$(shell echo sfs.img)
+endif
+RAMDISK_OBJ := $(RAMDISK_FILE).o
+
+__CMD := case sfs_cp.img in /*) echo 1;; esac
+ifeq ($(shell $(__CMD)), 1)
+CPRAMDISK_FILE := $(shell echo sfs_cp.img)
+else
+CPRAMDISK_FILE := $(OBJPATH_ROOT)/$(shell echo sfs_cp.img)
+endif
+CPRAMDISK_OBJ := $(CPRAMDISK_FILE).o
+
+
+ifdef UCONFIG_SWAP
+SWAPIMG		:= ${T_OBJ}/swap.img
+export SWAP_FILE ?= $(SWAPIMG)
+__CMD := case swap.img in /*) echo 1;; esac
+ifeq ($(shell $(__CMD)), 1)
+SWAPFS_FILE := $(shell echo swap.img)
+else
+SWAPFS_FILE := $(OBJPATH_ROOT)/$(shell echo swap.img)
+endif
+
+SWAP_OBJ := $(SWAPFS_FILE).o
+endif
+
+
+$(KERNEL_IMG): $(KERNEL_ELF)
+	@echo Making $@
+	cd $(TOPDIR)/../riscv-pk && rm -rf build && mkdir build && cd build && ../configure --prefix=$(RISCV) --host=riscv64-unknown-elf --with-payload=$(KERNEL_ELF) --disable-fp-emulation --enable-logo && make && cp bbl $(KERNEL_IMG)
+
+
+$(KERNEL_ELF): $(KERNEL_ELF_RAW) $(KERNEL_SYM)
+	@echo Linking uCore RAW
+
+	$(Q)$(TARGET_LD) $(TARGET_LDFLAGS) -T $(LINK_FILE_MERGE) $(KERNEL_ELF_RAW) $(KERNEL_SYM) -o $@
+
+$(KERNEL_SYM): $(KERNEL_ELF_RAW) $(KTREE_OBJ_ROOT)/sym.S
+	@riscv64-unknown-elf-readelf -x .symtab $(KERNEL_ELF_RAW) | tail -n +3 | sed 's/0x//' | xxd -r -c 16 > $(KTREE_OBJ_ROOT)/symtab.raw
+	@riscv64-unknown-elf-readelf -x .strtab $(KERNEL_ELF_RAW) | tail -n +3 | sed 's/0x//' | xxd -r -c 16 > $(KTREE_OBJ_ROOT)/strtab.raw
+
+	@cd $(KTREE_OBJ_ROOT) && riscv64-unknown-elf-gcc -c -o $(KERNEL_SYM) $(KTREE_OBJ_ROOT)/sym.S
+
+$(KTREE_OBJ_ROOT)/sym.S: $(KTREE)/arch/${ARCH}/sym.S
+	@cp $(KTREE)/arch/${ARCH}/sym.S $(KTREE_OBJ_ROOT)/sym.S
+
+$(KERNEL_ELF_RAW): $(LINK_FILE) $(KERNEL_BUILTIN) $(RAMDISK_OBJ) $(CPRAMDISK_OBJ) $(SWAP_OBJ)
+	@echo Linking uCore RAW
+	$(Q)$(TARGET_LD) $(TARGET_LDFLAGS) -r -T $(LINK_FILE) $(KERNEL_BUILTIN) $(RAMDISK_OBJ) $(CPRAMDISK_OBJ) $(SWAP_OBJ) -o $@
+
+$(LINK_FILE): $(LINK_FILE_IN) $(KCONFIG_AUTOCONFIG)
+	@echo "creating linker script"
+	@sed  "$(SEDFLAGS)" < $< > $@
+
+INITRD_PIGGY_S:=$(KTREE_OBJ_ROOT)/arch/$(ARCH)/tools/initrd.S
+$(RAMDISK_OBJ): $(RAMDISK_FILE)
+	@echo "Linking Initrd into kernel, using $(RAMDISK_FILE)"
+	@mkdir -p $(KTREE_OBJ_ROOT)/arch/$(ARCH)/tools
+	@sed "s#DATA_FILE#$(RAMDISK_FILE)#" < $(KTREE)/arch/$(ARCH)/tools/initrd.S.in > $(INITRD_PIGGY_S)
+	$(Q)$(TARGET_CC) -c $(INITRD_PIGGY_S) -o $@
+	$(Q)rm -f $(INITRD_PIGGY_S)
+
+CPINITRD_PIGGY_S:=$(KTREE_OBJ_ROOT)/arch/$(ARCH)/tools/initrd_cp.S
+$(CPRAMDISK_OBJ): $(CPRAMDISK_FILE)
+	@echo "Linking Initrd_cp into kernel, using $(CPRAMDISK_FILE)"
+	@mkdir -p $(KTREE_OBJ_ROOT)/arch/$(ARCH)/tools
+	@sed "s#CP_DATA_FILE#$(CPRAMDISK_FILE)#" < $(KTREE)/arch/$(ARCH)/tools/initrd_cp.S.in > $(CPINITRD_PIGGY_S)
+	$(Q)$(TARGET_CC) -c $(CPINITRD_PIGGY_S) -o $@
+	$(Q)rm -f $(CPINITRD_PIGGY_S)
+
+ifdef UCONFIG_SWAP
+SWAPRD_PIGGY_S:=$(KTREE_OBJ_ROOT)/arch/$(ARCH)/tools/swaprd.S
+$(SWAP_OBJ): $(SWAPFS_FILE)
+	@echo "Linking Swaprd into kernel, using $(SWAPFS_FILE)"
+	@mkdir -p $(KTREE_OBJ_ROOT)/arch/$(ARCH)/tools
+	@sed "s#SWAP_FILE#$(SWAPFS_FILE)#" < $(KTREE)/arch/$(ARCH)/tools/swaprd.S.in > $(SWAPRD_PIGGY_S)
+	$(Q)$(TARGET_CC) -c $(SWAPRD_PIGGY_S) -o $@
+	$(Q)rm -f $(SWAPRD_PIGGY_S)
+endif
+
+.PHONY: all clean FORCE
+all: $(KERNEL_IMG)
+
+FORCE:
+
+clean:
+	rm -f $(KERNEL_ELF) $(LINK_FILE) $(KERNEL_ELF_RAW)

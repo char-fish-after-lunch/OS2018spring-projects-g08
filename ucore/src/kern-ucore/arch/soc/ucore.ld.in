@@ -1,0 +1,102 @@
+/* Simple linker script for the ucore kernel.
+   See the GNU ld 'info' manual ("info ld") to learn the syntax. */
+
+OUTPUT_ARCH(riscv)
+ENTRY(kern_entry)
+
+/* TODO: SUPER DIRTY WORKAROUND */
+BASE_ADDRESS = 0xFFFFFFC080200000;
+
+SECTIONS
+{
+    /* Load the kernel at this address: "." means the current address */
+    . = BASE_ADDRESS;
+
+    .text : AT(0x80200000) {
+        *(.text.kern_entry .text .stub .text.* .gnu.linkonce.t.*)
+    }
+
+    PROVIDE(etext = .); /* Define the 'etext' symbol to this value */
+
+    .rodata : {
+        *(.rodata .rodata.* .gnu.linkonce.r.*)
+        . = ALIGN(8);
+        PROVIDE(__arch_info_begin = .);
+        *(.arch.info.init)
+        PROVIDE(__arch_info_end = .);
+        . = ALIGN(8);
+        PROVIDE(__start___param = .);
+        *(__param)
+        PROVIDE(__stop___param = .);
+        . = ALIGN(8);
+        PROVIDE(__start___ksymtab = .);
+        *(__ksymtab)
+        PROVIDE(__stop___ksymtab = .);
+        . = ALIGN(8);
+        PROVIDE(__start___ksymtab_gpl = .);
+        *(__ksymtab_gpl)
+        PROVIDE(__stop___ksymtab_gpl = .);
+        . = ALIGN(8);
+        
+        *(__ksymtab_strings)
+
+    
+    }
+
+
+    /* Adjust the address for the data segment to the next page */
+    . = ALIGN(0x1000);
+
+    /* The data segment !COPY FROM ARM! */
+    /* We don't link .initrd into another section because
+     * QEMU only load .text and .data
+     * However, our own loader will load all sections.
+     */
+    .data : {
+        *(.data)
+        *(.data.*)
+        . = ALIGN(4096);
+        PROVIDE(initrd_begin = .);
+        *(.initrd)
+        . = ALIGN(4096); 
+        PROVIDE(initrd_end = .);
+        . = ALIGN(4096);
+        PROVIDE(initrd_cp_begin = .);
+        *(.initrd_cp)
+        . = ALIGN(4096); 
+        PROVIDE(initrd_cp_end = .);
+        . = ALIGN(4096);
+        PROVIDE(swaprd_begin = .);
+        *(.swaprd)
+        . = ALIGN(4096); 
+        PROVIDE(swaprd_end = .);
+    }
+
+    .sdata : {
+        *(.sdata)
+        *(.sdata.*)
+    }
+
+    PROVIDE(edata = .);
+
+    .bss : {
+        *(.bss)
+        *(.bss.*)
+        *(.sbss*)
+    }
+    . = ALIGN(0x1000);
+
+    
+    .percpu : {
+        PROVIDE(__percpu_start = .);
+        *(.percpu)
+        PROVIDE(__percpu_end = .);
+    }
+
+
+    PROVIDE(end = .);
+
+    /DISCARD/ : {
+        *(.eh_frame .note.GNU-stack)
+    }
+}

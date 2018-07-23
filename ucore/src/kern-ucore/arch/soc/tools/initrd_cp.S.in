@@ -1,0 +1,2 @@
+.section .initrd_cp
+.incbin "CP_DATA_FILE"
