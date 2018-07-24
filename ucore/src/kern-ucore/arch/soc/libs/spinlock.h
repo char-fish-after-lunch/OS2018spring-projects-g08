@@ -27,8 +27,7 @@ static inline int spinlock_acquire_try(spinlock_t lock)
 static inline void spinlock_release(spinlock_t lock)
 {
 	assert(lock->lock != 0);
-	int i = 0;
-	__atomic_store((volatile unsigned int *)&(lock->lock), &i, __ATOMIC_SEQ_CST);
+	atomic_set((atomic_t*)&(lock->lock), 0);
 }
 
 #define spin_lock_irqsave(lock, x)      do { x = __intr_save();spinlock_acquire(lock); } while (0)

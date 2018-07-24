@@ -20,6 +20,9 @@
     .section .text,"ax",%progbits
     .globl kern_entry
 kern_entry:
+    li sp, 0xe700
+    tail kern_init
+
 
     # setup paging
     la t0, __boot_pgdir

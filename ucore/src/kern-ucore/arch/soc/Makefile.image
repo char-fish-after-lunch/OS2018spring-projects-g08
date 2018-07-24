@@ -92,7 +92,7 @@ $(SWAP_OBJ): $(SWAPFS_FILE)
 endif
 
 .PHONY: all clean FORCE
-all: $(KERNEL_IMG)
+all: $(KERNEL_ELF)
 
 FORCE:
 

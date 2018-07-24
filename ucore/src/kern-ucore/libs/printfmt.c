@@ -211,6 +211,7 @@ reswitch:
 					break;
 				}
 			}
+
 			goto process_precision;
 
 		case '*':
@@ -317,6 +318,7 @@ process_precision:
 			num = getuint(ap, lflag);
 			base = 16;
 number:
+
 			printnum(putch, fd, putdat, num, base, width, padc);
 			break;
 

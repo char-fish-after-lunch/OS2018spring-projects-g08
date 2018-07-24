@@ -56,7 +56,15 @@ static void start_others(){
 }
 
 int kern_init(uintptr_t hartid, uintptr_t good) {
-    asm volatile ("mv tp, %0;" : : "r"(cpus + hartid));
+    kio_init();
+    const char *message = "(THU.CST) os is loading ...\n";
+    kprintf("%s\n\n", message);
+    // kprintf("%s\n\n", message);
+    print_kerninfo();
+    while(1);
+
+
+    // asm volatile ("mv tp, %0;" : : "r"(cpus + hartid));
     if(hartid != 0){
         // wait for bsp to do init work
         while(!bsp_started);
@@ -66,14 +74,8 @@ int kern_init(uintptr_t hartid, uintptr_t good) {
     extern char edata[], end[];
     memset(edata, 0, end - edata);
 
-    cons_init();  // init the console
-
-    const char *message = "(THU.CST) os is loading ...\n";
-    kprintf("%s\n\n", message);
-
     smp_init();
     
-    print_kerninfo();
 
     /* Only to initialize lcpu_count. */
     /* We don't support NUMA. */

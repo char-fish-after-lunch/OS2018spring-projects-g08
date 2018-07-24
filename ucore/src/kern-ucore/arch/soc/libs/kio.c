@@ -38,10 +38,15 @@ int vkprintf(const char *fmt, va_list ap)
 	vprintfmt((void *)cputch, NO_FD, &cnt, fmt, ap);
 	//spinlock_release(&kprintf_lock);
 	//local_intr_restore_hw(flag);
+
 	return cnt;
 }
 
 static spinlock_s kprintf_lock;
+
+void kio_init(){
+	kprintf_lock.lock = 0;
+}
 
 /* *
  * kprintf - formats a string and writes it to stdout
@@ -59,6 +64,7 @@ int kprintf(const char *fmt, ...)
 	va_end(ap);
 	spinlock_release(&kprintf_lock);
 	
+
 	return cnt;
 }
 

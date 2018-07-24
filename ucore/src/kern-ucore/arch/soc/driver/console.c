@@ -5,6 +5,9 @@
 
 #define CONSBUFSIZE 512
 
+#define ADR_SERIAL_DAT 0xf000
+#define ADR_SERIAL_BUF 0xf004
+
 static struct {
     uint8_t buf[CONSBUFSIZE];
     uint32_t rpos;
@@ -34,11 +37,11 @@ void kbd_intr(void) {
 
 /* serial_proc_data - get data from serial port */
 int serial_proc_data(void) {
-    int c = sbi_console_getchar();
-    if (c < 0) {
+    if(!(*((unsigned*)ADR_SERIAL_BUF) & 0xf0))
         return -1;
-    }
+    int c = *((int*)ADR_SERIAL_DAT);
     if (c == 127) {
+    //TODO: don't know what this does
         c = '\b';
     }
     return c;
@@ -51,13 +54,8 @@ void serial_intr(void) {
 
 /* serial_putc - print character to serial port */
 void serial_putc(int c) {
-    if (c != '\b') {
-        sbi_console_putchar(c);
-    } else {
-        sbi_console_putchar('\b');
-        sbi_console_putchar(' ');
-        sbi_console_putchar('\b');
-    }
+    while(!(*((volatile unsigned*)ADR_SERIAL_BUF) & 0xf));
+    *((unsigned*)ADR_SERIAL_DAT) = (unsigned)c;
 }
 
 /* cons_init - initializes the console devices */

@@ -9,7 +9,7 @@
 #include <assert.h>
 
 static inline bool __intr_save(void) {
-    if (read_csr(sstatus) & SSTATUS_SIE) {
+    if (read_csr(mstatus) & MSTATUS_MIE) {
         intr_disable();
         return 1;
     }

@@ -4,6 +4,8 @@
 #include <types.h>
 #include <stdarg.h>
 
+void kio_init();
+
 void cons_putc(int c);
 int cons_getc(void);
 
