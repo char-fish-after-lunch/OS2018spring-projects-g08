@@ -18,6 +18,12 @@
 #include <syscall.h>
 #include <error.h>
 
+#define ADR_PLIC 0b00000010000000000100000000100100
+#define IRQ_SERIAL 1
+#define IRQ_KEYBOARD 2
+#define IRQ_NETWORK 3
+#define IRQ_RESERVED 4
+
 #define TICK_NUM 100
 
 static void print_ticks() {
@@ -35,18 +41,18 @@ void idt_init(void) {
     extern void __alltraps(void);
     /* Set sscratch register to 0, indicating to exception vector that we are
      * presently executing in the kernel */
-    write_csr(sscratch, 0);
+    write_csr(mscratch, 0);
     /* Set the exception vector address */
-    write_csr(stvec, &__alltraps);
+    write_csr(mtvec, &__alltraps);
     /* Allow kernel to access user memory */
-    set_csr(sstatus, SSTATUS_SUM);
+    set_csr(mstatus, MSTATUS_SUM);
     /* Allow keyboard interrupt */
-    set_csr(sie, MIP_SSIP);
+    set_csr(mie, MIP_MEIP);
 }
 
 /* trap_in_kernel - test if trap happened in kernel */
 bool trap_in_kernel(struct trapframe *tf) {
-    return (tf->status & SSTATUS_SPP) != 0;
+    return (tf->status & MSTATUS_MPP) != 0;
 }
 
 void print_trapframe(struct trapframe *tf) {
@@ -137,14 +143,13 @@ extern struct mm_struct *check_mm_struct;
 void interrupt_handler(struct trapframe *tf) {
 
     intptr_t cause = (tf->cause << 1) >> 1;
+    uint32_t irq_source;
     switch (cause) {
         case IRQ_U_SOFT:
             kprintf("User software interrupt\n");
             break;
         case IRQ_S_SOFT:
             kprintf("Supervisor software interrupt\n");
-            serial_intr();
-            dev_stdin_write(cons_getc());
             break;
         case IRQ_H_SOFT:
             kprintf("Hypervisor software interrupt\n");
@@ -155,7 +160,7 @@ void interrupt_handler(struct trapframe *tf) {
         case IRQ_U_TIMER:
             kprintf("User timer interrupt\n");
             break;
-        case IRQ_S_TIMER:
+        case IRQ_M_TIMER:
             // "All bits besides SSIP and USIP in the sip register are
             // read-only." -- privileged spec1.9.1, 4.1.4, p59
             // In fact, Call sbi_set_timer will clear STIP, or you can clear it
@@ -168,20 +173,19 @@ void interrupt_handler(struct trapframe *tf) {
             if(myid() == 0){ // TODO: this is not so symmetry
             // find a more elegant solution
                 ++ticks;
+                if(ticks % 100 == 0){
+                    print_ticks();
+                }
             }
 
-            run_timer_list();
+            // run_timer_list();
 
-            if(myid() == 0){
-                serial_intr();
-                dev_stdin_write(cons_getc());
-            }
             break;
         case IRQ_H_TIMER:
             kprintf("Hypervisor software interrupt\n");
             break;
-        case IRQ_M_TIMER:
-            kprintf("Machine software interrupt\n");
+        case IRQ_S_TIMER:
+            kprintf("Supervisor software interrupt\n");
             break;
         case IRQ_U_EXT:
             kprintf("User external interrupt\n");
@@ -194,11 +198,20 @@ void interrupt_handler(struct trapframe *tf) {
             break;
         case IRQ_M_EXT:
             kprintf("Machine external interrupt\n");
+            irq_source = *((uint32_t*)ADR_PLIC);
+            switch(irq_source){
+                case IRQ_SERIAL:
+                    serial_intr();
+                    break;
+            }
+            *((uint32_t*)ADR_PLIC) = irq_source;
+            // dev_stdin_write(cons_getc());
             break;
         default:
             print_trapframe(tf);
             break;
     }
+    clear_csr(mip, 1 << ((cause << 1) >> 1));
 }
 
 void exception_handler(struct trapframe *tf) {
@@ -242,9 +255,12 @@ void exception_handler(struct trapframe *tf) {
             break;
         case CAUSE_HYPERVISOR_ECALL:
             kprintf("Environment call from H-mode\n");
+            tf->epc += 4;
             break;
         case CAUSE_MACHINE_ECALL:
             kprintf("Environment call from M-mode\n");
+            tf->epc += 4;
+            syscall();
             break;
         case CAUSE_FETCH_PAGE_FAULT:
             print_trapframe(tf);

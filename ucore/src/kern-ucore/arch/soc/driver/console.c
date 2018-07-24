@@ -37,7 +37,7 @@ void kbd_intr(void) {
 
 /* serial_proc_data - get data from serial port */
 int serial_proc_data(void) {
-    if(!(*((unsigned*)ADR_SERIAL_BUF) & 0xf0))
+    if(!(*((volatile unsigned*)ADR_SERIAL_BUF) & 0xf0))
         return -1;
     int c = *((int*)ADR_SERIAL_DAT);
     if (c == 127) {

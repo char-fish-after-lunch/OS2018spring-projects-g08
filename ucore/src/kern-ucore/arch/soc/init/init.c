@@ -21,14 +21,14 @@
 #endif
 //#include <mod.h>
 
-int kern_init(uintptr_t hartid, uintptr_t good) __attribute__((noreturn));
+int kern_init(uintptr_t hartid) __attribute__((noreturn));
 void grade_backtrace(void);
 static void lab1_switch_test(void);
 static volatile int bsp_started;
 
 extern struct cpu cpus[];
 
-static void ap_init(uintptr_t hartid, uintptr_t good){
+static void ap_init(uintptr_t hartid){
     load_pgdir(NULL);
     intr_enable();  // enable irq interrupt
 
@@ -55,27 +55,29 @@ static void start_others(){
     }
 }
 
-int kern_init(uintptr_t hartid, uintptr_t good) {
-    kio_init();
-    const char *message = "(THU.CST) os is loading ...\n";
-    kprintf("%s\n\n", message);
-    // kprintf("%s\n\n", message);
-    print_kerninfo();
-    while(1);
+int kern_init(uintptr_t hartid) {
+    asm volatile ("addi tp, %0, 0;" : : "r"(cpus + hartid));
+    smp_init();
 
-
-    // asm volatile ("mv tp, %0;" : : "r"(cpus + hartid));
-    if(hartid != 0){
-        // wait for bsp to do init work
-        while(!bsp_started);
-        ap_init(hartid, good); // not expected to return
-    }
 
     extern char edata[], end[];
     memset(edata, 0, end - edata);
 
-    smp_init();
-    
+
+    // kio_init();
+
+
+    const char *message = "(THU.CST) os is loading ...\n";
+    kprintf("%s\n\n", message);
+
+    print_kerninfo();
+
+    if(hartid != 0){
+        // wait for bsp to do init work
+        while(!bsp_started);
+        ap_init(hartid); // not expected to return
+    }
+
 
     /* Only to initialize lcpu_count. */
     /* We don't support NUMA. */
@@ -84,32 +86,28 @@ int kern_init(uintptr_t hartid, uintptr_t good) {
 	size_t nr_used_pages_store = nr_used_pages();
 
     assert(myid() == hartid);
-	//debug_init();		// init debug registers
-    pmm_init();  // init physical memory management
+    // pmm_init();  // init physical memory management
     
-    /* We don't support NUMA. */
-    // pmm_init_ap();
-
 
 
     pic_init();  // init interrupt controller
     idt_init();  // init interrupt descriptor table
 
-    vmm_init();                 // init virtual memory management
-    sched_init();		// init scheduler
-    proc_init();                // init process table
+    // vmm_init();                 // init virtual memory management
+    // sched_init();		// init scheduler
+    // proc_init();                // init process table
     sync_init();		// init sync struct
 
 
 
-    ide_init();                 // init ide devices
+    // ide_init();                 // init ide devices
     start_others();
 
 
 #ifdef UCONFIG_SWAP
 	swap_init();		// init swap
 #endif
-    fs_init();
+    // fs_init();
     // rdtime in mbare mode crashes
     clock_init();  // init clock interrupt
     //mod_init();
@@ -117,7 +115,8 @@ int kern_init(uintptr_t hartid, uintptr_t good) {
 
     intr_enable();  // enable irq interrupt
 
-    cpu_idle();                 // run idle process
+    while(1);
+    // cpu_idle();                 // run idle process
 }
 
 void __attribute__((noinline))

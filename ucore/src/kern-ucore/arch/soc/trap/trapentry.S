@@ -7,13 +7,13 @@
     LOCAL _save_context
 
     # If coming from userspace, preserve the user stack pointer and load
-    # the kernel stack pointer. If we came from the kernel, sscratch
+    # the kernel stack pointer. If we came from the kernel, mscratch
     # will contain 0, and we should continue on the current stack.
-    csrrw sp, sscratch, sp
+    csrrw sp, mscratch, sp
     bnez sp, _save_context
 
 _restore_kernel_sp:
-    csrr sp, sscratch
+    csrr sp, mscratch
 _save_context:
     addi sp, sp, -36 * REGBYTES
     # save x registers
@@ -50,13 +50,13 @@ _save_context:
     STORE x31, 31*REGBYTES(sp)
 
     # get sr, epc, badvaddr, cause
-    # Set sscratch register to 0, so that if a recursive exception
+    # Set mscratch register to 0, so that if a recursive exception
     # occurs, the exception vector knows it came from the kernel
-    csrrw s0, sscratch, x0
-    csrr s1, sstatus
-    csrr s2, sepc
-    csrr s3, 0x143
-    csrr s4, scause
+    csrrw s0, mscratch, x0
+    csrr s1, mstatus
+    csrr s2, mepc
+    csrr s3, mtval
+    csrr s4, mcause
 
     STORE s0, 2*REGBYTES(sp)
     STORE s1, 32*REGBYTES(sp)
@@ -72,16 +72,16 @@ _save_context:
     LOAD s1, 32*REGBYTES(sp)
     LOAD s2, 33*REGBYTES(sp)
 
-    andi s0, s1, SSTATUS_SPP
+    andi s0, s1, MSTATUS_SPP
     bnez s0, _restore_context
 
 _save_kernel_sp:
-    # Save unwound kernel stack pointer in sscratch
+    # Save unwound kernel stack pointer in mscratch
     addi s0, sp, 36 * REGBYTES
-    csrw sscratch, s0
+    csrw mscratch, s0
 _restore_context:
-    csrw sstatus, s1
-    csrw sepc, s2
+    csrw mstatus, s1
+    csrw mepc, s2
 
     # restore x registers
     LOAD x1, 1*REGBYTES(sp)
@@ -130,7 +130,7 @@ __alltraps:
 __trapret:
     RESTORE_ALL
     # return from supervisor call
-    sret
+    mret
  
     .globl forkrets
 forkrets:

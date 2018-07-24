@@ -6,6 +6,13 @@
 #include <arch.h>
 #include <smp.h>
 
+
+#define ADR_CMPL 0b00000010000000000100000000000000
+#define ADR_CMPH 0b00000010000000000100000000000100
+#define ADR_TMEL 0b00000010000000000100000000001000
+#define ADR_TMEH 0b00000010000000000100000000001100
+#define ADR_MSIP 0b00000010000000000100000000010000
+
 volatile size_t ticks;
 
 static inline uint64_t get_cycles(void) {
@@ -35,15 +42,22 @@ static uint64_t timebase;
 void clock_init(void) {
     // divided by 500 when using Spike(2MHz)
     // divided by 100 when using QEMU(10MHz)
+
+    *((unsigned*)ADR_CMPH) = 0;
+    *((unsigned*)ADR_CMPL) = 125000;
+
     timebase = 1e7 / 100;
     clock_set_next_event();
-    set_csr(sie, MIP_STIP);
+
+    set_csr(mie, MIP_MTIP);
 
     // initialize time counter 'ticks' to zero
-    if(myid() == 0)
-        ticks = 0;
+    ticks = 0;
 
     kprintf("++ setup timer interrupts\n");
 }
 
-void clock_set_next_event(void) { sbi_set_timer(get_cycles() + timebase); }
+void clock_set_next_event(void){
+    *((unsigned*)ADR_TMEH) = 0;
+    *((unsigned*)ADR_TMEL) = 0;
+}

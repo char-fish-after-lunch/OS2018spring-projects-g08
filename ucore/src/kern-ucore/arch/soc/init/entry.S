@@ -20,6 +20,8 @@
     .section .text,"ax",%progbits
     .globl kern_entry
 kern_entry:
+    # only one hart for now
+    addi a0, x0, 0
     li sp, 0xe700
     tail kern_init
 
