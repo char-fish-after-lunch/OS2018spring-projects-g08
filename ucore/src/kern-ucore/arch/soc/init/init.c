@@ -78,11 +78,6 @@ int kern_init(uintptr_t hartid) {
         ap_init(hartid); // not expected to return
     }
 
-
-    /* Only to initialize lcpu_count. */
-    /* We don't support NUMA. */
-	// mp_init();
-
 	size_t nr_used_pages_store = nr_used_pages();
 
     assert(myid() == hartid);
