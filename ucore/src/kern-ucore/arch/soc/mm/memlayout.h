@@ -71,7 +71,7 @@
 
 #define USERTOP             0xC0000000
 #define USTACKTOP           USERTOP
-#define USTACKPAGE          4096                         // # of pages in user stack
+#define USTACKPAGE          64                         // # of pages in user stack
 #define USTACKSIZE          (USTACKPAGE * PGSIZE)       // sizeof user stack
 
 #define USERBASE            0x200000

@@ -173,12 +173,13 @@ void interrupt_handler(struct trapframe *tf) {
             if(myid() == 0){ // TODO: this is not so symmetry
             // find a more elegant solution
                 ++ticks;
-                if(ticks % 100 == 0){
-                    print_ticks();
-                }
+                // if(ticks % 100 == 0){
+                //     print_ticks();
+                // }
+                dev_stdin_write(cons_getc());
             }
 
-            // run_timer_list();
+            run_timer_list();
 
             break;
         case IRQ_H_TIMER:
@@ -197,15 +198,14 @@ void interrupt_handler(struct trapframe *tf) {
             kprintf("Hypervisor external interrupt\n");
             break;
         case IRQ_M_EXT:
-            kprintf("Machine external interrupt\n");
             irq_source = *((uint32_t*)ADR_PLIC);
             switch(irq_source){
                 case IRQ_SERIAL:
-                    serial_intr();
+                    dev_stdin_write(cons_getc());
                     break;
             }
+            
             *((uint32_t*)ADR_PLIC) = irq_source;
-            // dev_stdin_write(cons_getc());
             break;
         default:
             print_trapframe(tf);
@@ -224,7 +224,7 @@ void exception_handler(struct trapframe *tf) {
             kprintf("Instruction access fault\n");
             break;
         case CAUSE_ILLEGAL_INSTRUCTION:
-            kprintf("Illegal instruction\n");
+            kprintf("Illegal instruction %08x\n", tf->epc);
             break;
         case CAUSE_BREAKPOINT:
             kprintf("Breakpoint\n");
@@ -258,7 +258,6 @@ void exception_handler(struct trapframe *tf) {
             tf->epc += 4;
             break;
         case CAUSE_MACHINE_ECALL:
-            kprintf("Environment call from M-mode\n");
             tf->epc += 4;
             syscall();
             break;
@@ -321,6 +320,7 @@ trap(struct trapframe *tf) {
     if (current == NULL) {
         trap_dispatch(tf);
     } else {
+        print_trapframe(tf);
         struct trapframe *otf = current->tf;
         current->tf = tf;
 

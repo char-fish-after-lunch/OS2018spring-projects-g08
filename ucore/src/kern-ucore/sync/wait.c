@@ -100,9 +100,9 @@ bool wait_in_queue(wait_t * wait)
 {
 	if(!wait->wait_queue)
 		return 0;
-	spinlock_acquire(&wait->lock);
+	// spinlock_acquire(&wait->lock);
 	bool ret = !list_empty(&(wait->wait_link));
-	spinlock_release(&wait->lock);
+	// spinlock_release(&wait->lock);
 	return ret;
 }
 
@@ -113,10 +113,11 @@ wakeup_wait(wait_queue_t * queue, wait_t * wait, uint32_t wakeup_flags,
 	if (del) {
 		wait_queue_del(queue, wait);
 	}
-	spinlock_acquire(&wait->lock);
+	kprintf("wake %d, %s\n", wait->proc->pid, wait->proc->name);
+	// spinlock_acquire(&wait->lock);
 	wait->wakeup_flags = wakeup_flags;
 	wakeup_proc(wait->proc);
-	spinlock_release(&wait->lock);
+	// spinlock_release(&wait->lock);
 }
 
 void wakeup_first(wait_queue_t * queue, uint32_t wakeup_flags, bool del)
@@ -129,7 +130,7 @@ void wakeup_first(wait_queue_t * queue, uint32_t wakeup_flags, bool del)
 
 void wakeup_queue(wait_queue_t * queue, uint32_t wakeup_flags, bool del)
 {
-	spinlock_acquire(&queue->lock);
+	// spinlock_acquire(&queue->lock);
 	wait_t *wait;
 	if ((wait = wait_queue_first(queue)) != NULL) {
 		if (del) {
@@ -142,16 +143,16 @@ void wakeup_queue(wait_queue_t * queue, uint32_t wakeup_flags, bool del)
 			} while ((wait = wait_queue_next(queue, wait)) != NULL);
 		}
 	}
-	spinlock_release(&queue->lock);
+	// spinlock_release(&queue->lock);
 }
 
 void wait_current_set(wait_queue_t * queue, wait_t * wait, uint32_t wait_state)
 {
-	spinlock_acquire(&queue->lock);
+	// spinlock_acquire(&queue->lock);
 	assert(current != NULL);
 	wait_init(wait, current);
 	current->state = PROC_SLEEPING;
 	current->wait_state = wait_state;
 	wait_queue_add(queue, wait);
-	spinlock_release(&queue->lock);
+	// spinlock_release(&queue->lock);
 }

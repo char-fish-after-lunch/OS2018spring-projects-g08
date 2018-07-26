@@ -192,7 +192,7 @@ static inline int atomic_xchg(atomic_t *v, int new)
     return 0;
 }
 
-#define atomic_compare_and_swap(ptr, oval, nval) ((*(ptr) == (oval)) ? (*(ptr) = (nval), 1) : 0)
+#define atomic_compare_and_swap(ptr, oval, nval) ((*((volatile uintptr*)ptr) == (oval)) ? (*(ptr) = (nval), 1) : 0)
 
 
 

@@ -140,9 +140,10 @@ static inline void sched_class_enqueue_after_wakeup(struct proc_struct *proc)
         	assert(proc->cpu_affinity == findRQ(rq));
 		}
 
-        spinlock_acquire(&(cpus[findRQ(rq)]).rqueue_lock);
+        // spinlock_acquire(&(cpus[findRQ(rq)]).rqueue_lock);
+		kprintf("gg");
 		sched_class->enqueue(rq, proc);
-        spinlock_release(&(cpus[findRQ(rq)]).rqueue_lock);
+        // spinlock_release(&(cpus[findRQ(rq)]).rqueue_lock);
 
 	}
 }
@@ -237,11 +238,11 @@ void stop_proc(struct proc_struct *proc, uint32_t wait)
 
 void wakeup_proc(struct proc_struct *proc)
 {
-	spinlock_acquire(&proc->lock);
+	// spinlock_acquire(&proc->lock);
 	assert(proc->state != PROC_ZOMBIE);
 	bool intr_flag;
 	local_intr_save(intr_flag);
-	spinlock_acquire(&stupid_lock);
+	// spinlock_acquire(&stupid_lock);
 	{
 		if (proc->state != PROC_RUNNABLE) {
 			// kprintf("W1 %d\n", proc->pid);
@@ -259,9 +260,9 @@ void wakeup_proc(struct proc_struct *proc)
 			warn("wakeup runnable process.\n");
 		}
 	}
-	spinlock_release(&stupid_lock);
+	// spinlock_release(&stupid_lock);
 	local_intr_restore(intr_flag);
-	spinlock_release(&proc->lock);
+	// spinlock_release(&proc->lock);
 }
 
 int try_to_wakeup(struct proc_struct *proc)
@@ -307,13 +308,14 @@ int try_to_wakeup(struct proc_struct *proc)
 
 void schedule(void)
 {
+	// kprintf("Scheduling!\n");
 	/* schedule in irq ctx is not allowed */
 	assert(!ucore_in_interrupt());
 	bool intr_flag;
 	struct proc_struct *next;
 
 	local_intr_save(intr_flag);
-	spinlock_acquire(&stupid_lock);
+	// spinlock_acquire(&stupid_lock);
 
 	#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
 	int lcpu_count = NCPU;
@@ -324,7 +326,7 @@ void schedule(void)
 		current->need_resched = 0;
 		load_balance();
 
-        spinlock_acquire(&mycpu()->rqueue_lock);
+        // spinlock_acquire(&mycpu()->rqueue_lock);
         {
             next = sched_class_pick_next();
             if (next != NULL){
@@ -332,13 +334,16 @@ void schedule(void)
             }
             else
                 next = idleproc;
+
         }
-        spinlock_release(&mycpu()->rqueue_lock);
+        // spinlock_release(&mycpu()->rqueue_lock);
 		
         next->runs++;
-		spinlock_release(&stupid_lock);
-		if (next != current)
+		// spinlock_release(&stupid_lock);
+		if (next != current){
+			kprintf("%s, %d\n", next->name, next->pid);
 			proc_run(next);
+		}
 	}
 	local_intr_restore(intr_flag);
 }

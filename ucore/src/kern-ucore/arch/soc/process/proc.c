@@ -72,7 +72,7 @@ int kernel_thread(int (*fn) (void *), void *arg, uint32_t clone_flags)
     memset(&tf, 0, sizeof(struct trapframe));
     tf.gpr.s0 = (uintptr_t)fn;
     tf.gpr.s1 = (uintptr_t)arg;
-    tf.status = (read_csr(sstatus) | SSTATUS_SPP | SSTATUS_SPIE) & ~SSTATUS_SIE;
+    tf.status = (read_csr(mstatus) | MSTATUS_MPP | MSTATUS_MPIE) & ~MSTATUS_MIE;
     tf.epc = (uintptr_t)kernel_thread_entry;
     return do_fork(clone_flags | CLONE_VM |__CLONE_PINCPU, 0, &tf);
 }
@@ -125,12 +125,12 @@ init_new_context(struct proc_struct *proc, struct elfhdr *elf,
 
 	struct trapframe *tf = proc->tf;
 	// Keep sstatus
-	uintptr_t sstatus = tf->status;
+	uintptr_t mstatus = tf->status;
 	memset(tf, 0, sizeof(struct trapframe));
 
 	tf->gpr.sp = stacktop;
 	tf->epc = elf->e_entry;
-	tf->status = sstatus & ~(SSTATUS_SPP | SSTATUS_SPIE);
+	tf->status = mstatus & ~(MSTATUS_MPP);
 	return 0;
 }
 

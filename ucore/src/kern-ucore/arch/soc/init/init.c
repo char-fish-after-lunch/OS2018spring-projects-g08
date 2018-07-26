@@ -95,23 +95,22 @@ int kern_init(uintptr_t hartid) {
 
 
 
-    // ide_init();                 // init ide devices
+    ide_init();                 // init ide devices
     start_others();
 
 
 #ifdef UCONFIG_SWAP
 	swap_init();		// init swap
 #endif
-    // fs_init();
+    fs_init();
     // rdtime in mbare mode crashes
     clock_init();  // init clock interrupt
-    //mod_init();
+    mod_init();
 
 
     intr_enable();  // enable irq interrupt
 
-    while(1);
-    // cpu_idle();                 // run idle process
+    cpu_idle();                 // run idle process
 }
 
 void __attribute__((noinline))

@@ -72,7 +72,8 @@ _save_context:
     LOAD s1, 32*REGBYTES(sp)
     LOAD s2, 33*REGBYTES(sp)
 
-    andi s0, s1, MSTATUS_SPP
+    li s0, MSTATUS_MPP
+    and s0, s0, s1
     bnez s0, _restore_context
 
 _save_kernel_sp:
