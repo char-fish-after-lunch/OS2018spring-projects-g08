@@ -74,7 +74,6 @@ struct Page *pgdir_alloc_page(pgd_t *pgdir, uintptr_t la, uint32_t perm);
 void load_rsp0(uintptr_t rsp0);
 void set_pgdir(struct proc_struct *proc, pgd_t * pgdir);
 void load_pgdir(struct proc_struct *proc);
-void map_pgdir(pgd_t * pgdir);
 
 
 void tlb_update(pgd_t * pgdir, uintptr_t la);
@@ -129,7 +128,7 @@ void print_pgdir(void);
 extern struct Page *pages;
 extern size_t npage;
 extern const size_t nbase;
-extern uint64_t va_pa_offset;
+extern uint32_t va_pa_offset;
 
 static inline ppn_t page2ppn(struct Page *page) { return page - pages + nbase; }
 

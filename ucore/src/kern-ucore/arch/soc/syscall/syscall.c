@@ -16,27 +16,27 @@
 #include <unistd.h>
 
 
-static uint64_t sys_exit(uint64_t arg[])
+static uint32_t sys_exit(uint32_t arg[])
 {
 	int error_code = (int)arg[0];
 	return do_exit(error_code);
 }
 
-static uint64_t sys_fork(uint64_t arg[])
+static uint32_t sys_fork(uint32_t arg[])
 {
 	struct trapframe *tf = current->tf;
 	uintptr_t stack = tf->gpr.sp;
 	return do_fork(0, stack, tf);
 }
 
-static uint64_t sys_wait(uint64_t arg[])
+static uint32_t sys_wait(uint32_t arg[])
 {
 	int pid = (int)arg[0];
 	int *store = (int *)arg[1];
 	return do_wait(pid, store);
 }
 
-static uint64_t sys_exec(uint64_t arg[])
+static uint32_t sys_exec(uint32_t arg[])
 {
 	const char *name = (const char *)arg[0];
 	const char **argv = (const char **)arg[1];
@@ -44,7 +44,7 @@ static uint64_t sys_exec(uint64_t arg[])
 	return do_execve(name, argv, envp);
 }
 
-static uint64_t sys_clone(uint64_t arg[])
+static uint32_t sys_clone(uint32_t arg[])
 {
 	struct trapframe *tf = current->tf;
 	uint32_t clone_flags = (uint32_t) arg[0];
@@ -55,46 +55,46 @@ static uint64_t sys_clone(uint64_t arg[])
 	return do_fork(clone_flags, stack, tf);
 }
 
-static uint64_t sys_exit_thread(uint64_t arg[])
+static uint32_t sys_exit_thread(uint32_t arg[])
 {
 	int error_code = (int)arg[0];
 	return do_exit_thread(error_code);
 }
 
-static uint64_t sys_yield(uint64_t arg[])
+static uint32_t sys_yield(uint32_t arg[])
 {
 	return do_yield();
 }
 
-static uint64_t sys_sleep(uint64_t arg[])
+static uint32_t sys_sleep(uint32_t arg[])
 {
 	unsigned int time = (unsigned int)arg[0];
 	return do_sleep(time);
 }
 
-static uint64_t sys_kill(uint64_t arg[])
+static uint32_t sys_kill(uint32_t arg[])
 {
 	int pid = (int)arg[0];
 	return do_kill(pid, -E_KILLED);
 }
 
-static uint64_t sys_gettime(uint64_t arg[])
+static uint32_t sys_gettime(uint32_t arg[])
 {
 	return (int)ticks;
 }
 
-static uint64_t sys_getpid(uint64_t arg[])
+static uint32_t sys_getpid(uint32_t arg[])
 {
 	return current->pid;
 }
 
-static uint64_t sys_brk(uint64_t arg[])
+static uint32_t sys_brk(uint32_t arg[])
 {
 	uintptr_t *brk_store = (uintptr_t *) arg[0];
 	return do_brk(brk_store);
 }
 
-static uint64_t sys_mmap(uint64_t arg[])
+static uint32_t sys_mmap(uint32_t arg[])
 {
 	uintptr_t *addr_store = (uintptr_t *) arg[0];
 	size_t len = (size_t) arg[1];
@@ -102,14 +102,14 @@ static uint64_t sys_mmap(uint64_t arg[])
 	return do_mmap(addr_store, len, mmap_flags);
 }
 
-static uint64_t sys_munmap(uint64_t arg[])
+static uint32_t sys_munmap(uint32_t arg[])
 {
 	uintptr_t addr = (uintptr_t) arg[0];
 	size_t len = (size_t) arg[1];
 	return do_munmap(addr, len);
 }
 
-static uint64_t sys_shmem(uint64_t arg[])
+static uint32_t sys_shmem(uint32_t arg[])
 {
 	uintptr_t *addr_store = (uintptr_t *) arg[0];
 	size_t len = (size_t) arg[1];
@@ -117,52 +117,52 @@ static uint64_t sys_shmem(uint64_t arg[])
 	return do_shmem(addr_store, len, mmap_flags);
 }
 
-static uint64_t sys_putc(uint64_t arg[])
+static uint32_t sys_putc(uint32_t arg[])
 {
 	int c = (int)arg[0];
 	cons_putc(c);
 	return 0;
 }
 
-static uint64_t sys_pgdir(uint64_t arg[])
+static uint32_t sys_pgdir(uint32_t arg[])
 {
 	print_pgdir();
 	return 0;
 }
 
-static uint64_t sys_sem_init(uint64_t arg[])
+static uint32_t sys_sem_init(uint32_t arg[])
 {
 	int value = (int)arg[0];
 	return ipc_sem_init(value);
 }
 
-static uint64_t sys_sem_post(uint64_t arg[])
+static uint32_t sys_sem_post(uint32_t arg[])
 {
 	sem_t sem_id = (sem_t) arg[0];
 	return ipc_sem_post(sem_id);
 }
 
-static uint64_t sys_sem_wait(uint64_t arg[])
+static uint32_t sys_sem_wait(uint32_t arg[])
 {
 	sem_t sem_id = (sem_t) arg[0];
 	unsigned int timeout = (unsigned int)arg[1];
 	return ipc_sem_wait(sem_id, timeout);
 }
 
-static uint64_t sys_sem_free(uint64_t arg[])
+static uint32_t sys_sem_free(uint32_t arg[])
 {
 	sem_t sem_id = (sem_t) arg[0];
 	return ipc_sem_free(sem_id);
 }
 
-static uint64_t sys_sem_get_value(uint64_t arg[])
+static uint32_t sys_sem_get_value(uint32_t arg[])
 {
 	sem_t sem_id = (sem_t) arg[0];
 	int *value_store = (int *)arg[1];
 	return ipc_sem_get_value(sem_id, value_store);
 }
 
-static uint64_t sys_event_send(uint64_t arg[])
+static uint32_t sys_event_send(uint32_t arg[])
 {
 	int pid = (int)arg[0];
 	int event = (int)arg[1];
@@ -170,7 +170,7 @@ static uint64_t sys_event_send(uint64_t arg[])
 	return ipc_event_send(pid, event, timeout);
 }
 
-static uint64_t sys_event_recv(uint64_t arg[])
+static uint32_t sys_event_recv(uint32_t arg[])
 {
 	int *pid_store = (int *)arg[0];
 	int *event_store = (int *)arg[1];
@@ -178,13 +178,13 @@ static uint64_t sys_event_recv(uint64_t arg[])
 	return ipc_event_recv(pid_store, event_store, timeout);
 }
 
-static uint64_t sys_mbox_init(uint64_t arg[])
+static uint32_t sys_mbox_init(uint32_t arg[])
 {
 	unsigned int max_slots = (unsigned int)arg[0];
 	return ipc_mbox_init(max_slots);
 }
 
-static uint64_t sys_mbox_send(uint64_t arg[])
+static uint32_t sys_mbox_send(uint32_t arg[])
 {
 	int id = (int)arg[0];
 	struct mboxbuf *buf = (struct mboxbuf *)arg[1];
@@ -192,7 +192,7 @@ static uint64_t sys_mbox_send(uint64_t arg[])
 	return ipc_mbox_send(id, buf, timeout);
 }
 
-static uint64_t sys_mbox_recv(uint64_t arg[])
+static uint32_t sys_mbox_recv(uint32_t arg[])
 {
 	int id = (int)arg[0];
 	struct mboxbuf *buf = (struct mboxbuf *)arg[1];
@@ -200,33 +200,33 @@ static uint64_t sys_mbox_recv(uint64_t arg[])
 	return ipc_mbox_recv(id, buf, timeout);
 }
 
-static uint64_t sys_mbox_free(uint64_t arg[])
+static uint32_t sys_mbox_free(uint32_t arg[])
 {
 	int id = (int)arg[0];
 	return ipc_mbox_free(id);
 }
 
-static uint64_t sys_mbox_info(uint64_t arg[])
+static uint32_t sys_mbox_info(uint32_t arg[])
 {
 	int id = (int)arg[0];
 	struct mboxinfo *info = (struct mboxinfo *)arg[1];
 	return ipc_mbox_info(id, info);
 }
 
-static uint64_t sys_open(uint64_t arg[])
+static uint32_t sys_open(uint32_t arg[])
 {
 	const char *path = (const char *)arg[0];
 	uint32_t open_flags = (uint32_t) arg[1];
 	return sysfile_open(path, open_flags);
 }
 
-static uint64_t sys_close(uint64_t arg[])
+static uint32_t sys_close(uint32_t arg[])
 {
 	int fd = (int)arg[0];
 	return sysfile_close(fd);
 }
 
-static uint64_t sys_read(uint64_t arg[])
+static uint32_t sys_read(uint32_t arg[])
 {
 	int fd = (int)arg[0];
 	void *base = (void *)arg[1];
@@ -234,7 +234,7 @@ static uint64_t sys_read(uint64_t arg[])
 	return sysfile_read(fd, base, len);
 }
 
-static uint64_t sys_write(uint64_t arg[])
+static uint32_t sys_write(uint32_t arg[])
 {
 	int fd = (int)arg[0];
 	void *base = (void *)arg[1];
@@ -242,7 +242,7 @@ static uint64_t sys_write(uint64_t arg[])
 	return sysfile_write(fd, base, len);
 }
 
-static uint64_t sys_seek(uint64_t arg[])
+static uint32_t sys_seek(uint32_t arg[])
 {
 	int fd = (int)arg[0];
 	off_t pos = (off_t)arg[1];
@@ -250,120 +250,120 @@ static uint64_t sys_seek(uint64_t arg[])
 	return sysfile_seek(fd, pos, whence);
 }
 
-static uint64_t sys_fstat(uint64_t arg[])
+static uint32_t sys_fstat(uint32_t arg[])
 {
 	int fd = (int)arg[0];
 	struct stat *stat = (struct stat *)arg[1];
 	return sysfile_fstat(fd, stat);
 }
 
-static uint64_t sys_fsync(uint64_t arg[])
+static uint32_t sys_fsync(uint32_t arg[])
 {
 	int fd = (int)arg[0];
 	return sysfile_fsync(fd);
 }
 
-static uint64_t sys_chdir(uint64_t arg[])
+static uint32_t sys_chdir(uint32_t arg[])
 {
 	const char *path = (const char *)arg[0];
 	return sysfile_chdir(path);
 }
 
-static uint64_t sys_getcwd(uint64_t arg[])
+static uint32_t sys_getcwd(uint32_t arg[])
 {
 	char *buf = (char *)arg[0];
 	size_t len = (size_t)arg[1];
 	return sysfile_getcwd(buf, len);
 }
 
-static uint64_t sys_mkdir(uint64_t arg[])
+static uint32_t sys_mkdir(uint32_t arg[])
 {
 	const char *path = (const char *)arg[0];
 	return sysfile_mkdir(path);
 }
 
-static uint64_t sys_link(uint64_t arg[])
+static uint32_t sys_link(uint32_t arg[])
 {
 	const char *path1 = (const char *)arg[0];
 	const char *path2 = (const char *)arg[1];
 	return sysfile_link(path1, path2);
 }
 
-static uint64_t sys_rename(uint64_t arg[])
+static uint32_t sys_rename(uint32_t arg[])
 {
 	const char *path1 = (const char *)arg[0];
 	const char *path2 = (const char *)arg[1];
 	return sysfile_rename(path1, path2);
 }
 
-static uint64_t sys_unlink(uint64_t arg[])
+static uint32_t sys_unlink(uint32_t arg[])
 {
 	const char *name = (const char *)arg[0];
 	return sysfile_unlink(name);
 }
 
-static uint64_t sys_getdirentry(uint64_t arg[])
+static uint32_t sys_getdirentry(uint32_t arg[])
 {
 	int fd = (int)arg[0];
 	struct dirent *direntp = (struct dirent *)arg[1];
 	return sysfile_getdirentry(fd, direntp, NULL);
 }
 
-static uint64_t sys_dup(uint64_t arg[])
+static uint32_t sys_dup(uint32_t arg[])
 {
 	int fd1 = (int)arg[0];
 	int fd2 = (int)arg[1];
 	return sysfile_dup(fd1, fd2);
 }
 
-static uint64_t sys_pipe(uint64_t arg[])
+static uint32_t sys_pipe(uint32_t arg[])
 {
 	int *fd_store = (int *)arg[0];
 	return sysfile_pipe(fd_store);
 }
 
-static uint64_t sys_mkfifo(uint64_t arg[])
+static uint32_t sys_mkfifo(uint32_t arg[])
 {
 	const char *name = (const char *)arg[0];
 	uint32_t open_flags = (uint32_t) arg[1];
 	return sysfile_mkfifo(name, open_flags);
 }
 
-static uint64_t sys_init_module(uint64_t arg[]){
+static uint32_t sys_init_module(uint32_t arg[]){
 	void __user *umod = (void __user *)arg[0];
 	unsigned long len = (unsigned long)arg[1];
 	const char *urgs = (const char *)arg[2];
 	return do_init_module(umod, len, urgs);
 }
 
-static uint64_t sys_cleanup_module(uint64_t arg[]){
+static uint32_t sys_cleanup_module(uint32_t arg[]){
 	const char __user *name = (const char __user *)arg[0];
 	return do_cleanup_module(name);
 }
 
-static uint64_t sys_list_module(uint64_t arg[]){
+static uint32_t sys_list_module(uint32_t arg[]){
 	print_modules();
 	return 0;
 }
 
-static uint64_t sys_mount(uint64_t arg[]){
+static uint32_t sys_mount(uint32_t arg[]){
 	const char* device_name = (const char*)arg[0];
 	const char* fs_name = (const char*)arg[2];
 	return do_mount(device_name, fs_name);
 }
 
-static uint64_t sys_umount(uint64_t arg[]){
+static uint32_t sys_umount(uint32_t arg[]){
 	const char* device_name = (const char*)arg[0];
 	return do_umount(device_name);
 }
 
-// static uint64_t sys_halt(uint64_t arg[])
+// static uint32_t sys_halt(uint32_t arg[])
 // {
 // 	do_halt();
 // 	panic("halt returned");
 // }
 
-static uint64_t(*syscalls[]) (uint64_t arg[]) = {
+static uint32_t(*syscalls[]) (uint32_t arg[]) = {
 [SYS_exit] sys_exit,
 	    [SYS_fork] sys_fork,
 	    [SYS_wait] sys_wait,
@@ -421,7 +421,7 @@ static uint64_t(*syscalls[]) (uint64_t arg[]) = {
 void
 syscall(void) {
     struct trapframe *tf = current->tf;
-    uint64_t arg[5];
+    uint32_t arg[5];
     int num = tf->gpr.a0;
     if (num >= 0 && num < NUM_SYSCALLS) {
         if (syscalls[num] != NULL) {

@@ -63,19 +63,19 @@
  * table, which maps all the PTEs (Page Table Entry) containing the page mappings
  * for the entire virtual address space into that 4 Meg region starting at VPT.
  * */
-#define VPT                 0xFFFFFFE000000000
+#define VPT                 0xFFFFF000
 
 #define KSTACKPAGE          4                           // # of pages in kernel stack
 #define KSTACKSIZE          (KSTACKPAGE * PGSIZE)       // sizeof kernel stack
 #define KSTACKSHIFT         14                          // log2(KSTACKSIZE)
 
-#define USERTOP             0x0000004000000000
+#define USERTOP             0xC0000000
 #define USTACKTOP           USERTOP
 #define USTACKPAGE          4096                         // # of pages in user stack
 #define USTACKSIZE          (USTACKPAGE * PGSIZE)       // sizeof user stack
 
-#define USERBASE            0x0000000000200000
-#define UTEXT               0x0000000000800000          // where user programs generally begin
+#define USERBASE            0x200000
+#define UTEXT               0x800000          // where user programs generally begin
 #define USTAB               USERBASE                    // the location of the user STABS data structure
 
 #define USER_ACCESS(start, end)                     \
@@ -99,7 +99,7 @@
  * */
 struct Page {
     atomic_t ref;                        // page frame's reference counter
-    uint64_t flags;                 // array of flags that describe the status of the page frame
+    uint32_t flags;                 // array of flags that describe the status of the page frame
 	unsigned int property;	// used in buddy system, stores the order (the X in 2^X) of the continuous memory block
 	int zone_num;		// used in buddy system, the No. of zone which the page belongs to
     list_entry_t page_link;         // free list link

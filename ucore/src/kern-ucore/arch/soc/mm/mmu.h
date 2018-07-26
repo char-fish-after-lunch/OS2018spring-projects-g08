@@ -46,18 +46,16 @@
 
 // page table index
 #define PTX(la) ((((uintptr_t)(la)) >> PTXSHIFT) & 0x3FF)
-
 // page number field of address
-#define PPN(la) (((uintptr_t)(la)) >> PTXSHIFT)
+#define PPN(la) (((uintptr_t)(la)) >> PDX0SHIFT)
 
 // offset in page
 #define PGOFF(la) (((uintptr_t)(la)) & 0xFFF)
 
 // construct linear address from indexes and offset
-#define PGADDR(d1, d0, t, o) ((uintptr_t)((d1) << PDX1SHIFT | (d0) << PDX0SHIFT | (t) << PTXSHIFT | (o)))
 
 // address in page table or page directory entry
-#define PTE_ADDR(pte)   (((uintptr_t)(pte) & ~0x3FF) << (PTXSHIFT - PTE_PPN_SHIFT))
+#define PTE_ADDR(pte)   (((uintptr_t)(pte) & ~0x3FF) << 2)
 #define PDE_ADDR(pde)   PTE_ADDR(pde)
 
 /* page directory and page table constants */
@@ -68,22 +66,20 @@
 #define PGSHIFT         12                      // log2(PGSIZE)
 #define PTSIZE          (PGSIZE * NPTEENTRY)    // bytes mapped by a page directory entry
 #define PTSHIFT			22						// log2(PTSIZE)
-
-#define PTXSHIFT        12                      // offset of PTX in a linear address
+#define PTXSHIFT        12   
 #define PDX0SHIFT       12                      // offset of PDX[0] in a linear address
 #define PDX1SHIFT		22						// offset of PDX[1] in a linear address
-#define PTE_PPN_SHIFT   12                      // offset of PPN in a physical address
+#define PTE_PPN_SHIFT   10                      // offset of PPN in a physical address
 
 
 // for ucore+ kern-ucore/mm/pmm.c
-// #define PTXSHIFT        12     // has been defined above
 #define PMXSHIFT		PDX0SHIFT
-#define PUXSHIFT		PDX1SHIFT
+#define PUXSHIFT		PDX0SHIFT
 #define PGXSHIFT		PDX1SHIFT
 
 // page directory index
 #define PMX(la) PDX0(la)
-#define PUX(la) PDX1(la)
+#define PUX(la) PDX0(la)
 #define PGX(la) PDX1(la)
 
 // address in page table or page directory entry

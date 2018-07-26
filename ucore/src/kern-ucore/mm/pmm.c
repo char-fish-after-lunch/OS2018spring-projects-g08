@@ -36,9 +36,11 @@ pud_t *get_pud(pgd_t * pgdir, uintptr_t la, bool create)
 		uintptr_t pa = page2pa(page);
 		memset(KADDR(pa), 0, PGSIZE);
 		ptep_map(pgdp, pa);
+		#ifndef ARCH_SOC
 		ptep_set_u_write(pgdp);
 		ptep_set_accessed(pgdp);
 		ptep_set_dirty(pgdp);
+		#endif
 	}
 	return &((pud_t *) KADDR(PGD_ADDR(*pgdp)))[PUX(la)];
 #endif /* PUXSHIFT == PGXSHIFT */

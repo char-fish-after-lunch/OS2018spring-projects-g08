@@ -81,16 +81,16 @@ int kern_init(uintptr_t hartid) {
 	size_t nr_used_pages_store = nr_used_pages();
 
     assert(myid() == hartid);
-    // pmm_init();  // init physical memory management
+    pmm_init();  // init physical memory management
     
 
 
     pic_init();  // init interrupt controller
     idt_init();  // init interrupt descriptor table
 
-    // vmm_init();                 // init virtual memory management
-    // sched_init();		// init scheduler
-    // proc_init();                // init process table
+    vmm_init();                 // init virtual memory management
+    sched_init();		// init scheduler
+    proc_init();                // init process table
     sync_init();		// init sync struct
 
 

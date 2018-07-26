@@ -11,10 +11,10 @@
 void print_kerninfo(void) {
     extern char etext[], edata[], end[], kern_init[];
     kprintf("Special kernel symbols:\n");
-    kprintf("  entry  0x%016llx (virtual)\n", kern_init);
-    kprintf("  etext  0x%016llx (virtual)\n", etext);
-    kprintf("  edata  0x%016llx (virtual)\n", edata);
-    kprintf("  end    0x%016llx (virtual)\n", end);
+    kprintf("  entry  0x%08x (virtual)\n", kern_init);
+    kprintf("  etext  0x%08x (virtual)\n", etext);
+    kprintf("  edata  0x%08x (virtual)\n", edata);
+    kprintf("  end    0x%08x (virtual)\n", end);
     kprintf("Kernel executable memory footprint: %dKB\n",
             (end - kern_init + 1023) / 1024);
 }
@@ -41,7 +41,7 @@ void print_stackframe(void) {
     kprintf("Stack frame:\n");
 
     while(1){
-        kprintf("\tPC=%016llx , FP=%016llx, SP=%016llx\n",  pc, fp, sp);
+        kprintf("\tPC=%08x , FP=%08x, SP=%08x\n",  pc, fp, sp);
         uintptr_t low, high;
         struct stackframe* frame;
 

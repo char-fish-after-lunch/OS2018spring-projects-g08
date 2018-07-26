@@ -29,7 +29,7 @@ struct Page *pages;
 // amount of physical memory (in pages)
 size_t npage = 0;
 // the kernel image is mapped at VA=KERNBASE and PA=info.base
-uint64_t va_pa_offset = 0xFFFFFFC000000000;
+uint32_t va_pa_offset = 0xC0000000;
 // memory starts at 0x80000000 in RISC-V
 const size_t nbase = DRAM_BASE / PGSIZE;
 
@@ -56,7 +56,6 @@ spinlock_s pmm_lock;
  * always available at virtual address PGADDR(PDX(VPT), PDX(VPT), 0), to which
  * vpd is set bellow.
  * */
-pgd_t *const vpd = (pgd_t *)PGADDR(PDX1(VPT), PDX1(VPT), PDX1(VPT), 0);
 
 // init_pmm_manager - initialize a pmm_manager instance
 static void init_pmm_manager(void) {
@@ -105,6 +104,7 @@ void load_pgdir(struct proc_struct *proc)
 		lcr3(boot_cr3);
 }
 
+
 /**
  * map_pgdir - map the current pgdir @pgdir to its own address space
  */
@@ -114,8 +114,6 @@ void map_pgdir(pgd_t * pgdir)
     ptep_map(&(pgdir[PGX(VPT)]), PADDR(pgdir));
 	//ptep_set_present(&(pgdir[PGX(VPT)]));
 }
-
-
 
 
 // alloc_pages - call pmm->alloc_pages to allocate a continuous n*PAGESIZE
@@ -192,15 +190,15 @@ size_t nr_free_pages(void) {
 static void page_init(void) {
     extern char kern_entry[];
 
-    uint64_t mem_begin = (uint64_t)PADDR(kern_entry);
-    uint64_t mem_end = (256 << 20) + DRAM_BASE; // 256MB memory on qemu
-    uint64_t mem_size = mem_end - mem_begin;
+    uint32_t mem_begin = (uint32_t)PADDR(kern_entry);
+    uint32_t mem_end = (8 << 20) + DRAM_BASE - PGSIZE; // 8MB memory on SysCat; the last page not unusable
+    uint32_t mem_size = mem_end - mem_begin;
 
     kprintf("physical memory map:\n");
-    kprintf("  memory: 0x%016llx, [0x%016llx, 0x%016llx].\n", mem_size, mem_begin,
+    kprintf("  memory: 0x%08x, [0x%08x, 0x%08x].\n", mem_size, mem_begin,
             mem_end - 1);
 
-    uint64_t maxpa = mem_end;
+    uint32_t maxpa = mem_end;
 
     if (maxpa > PADDR(KERNTOP)) {
         maxpa = PADDR(KERNTOP);
@@ -229,7 +227,7 @@ static void page_init(void) {
 
 static void enable_paging(void) {
     // set page table
-    write_csr(satp, SATP_SV39 | (boot_cr3 >> RISCV_PGSHIFT));
+    write_csr(satp, 0x80000000 | (boot_cr3 >> RISCV_PGSHIFT));
 }
 
 // boot_map_segment - setup&enable the paging mechanism
@@ -312,20 +310,20 @@ void pmm_init(void) {
 		boot_map_segment(boot_pgdir, DISK_FS_VBASE,
 				 ROUNDUP(initrd_end - initrd_begin, PGSIZE),
 				 (uintptr_t) PADDR(initrd_begin), PTE_W | PTE_R);
-		kprintf("mapping initrd to 0x%016llx\n", DISK_FS_VBASE);
+		kprintf("mapping initrd to 0x%08x\n", DISK_FS_VBASE);
 	}
     if (CHECK_INITRD_CP_EXIST()) {
 		boot_map_segment(boot_pgdir, DISK2_FS_VBASE,
 				 ROUNDUP(initrd_cp_end - initrd_cp_begin, PGSIZE),
 				 (uintptr_t) PADDR(initrd_cp_begin), PTE_W | PTE_R);
-		kprintf("mapping initrd_cp to 0x%016llx\n", DISK2_FS_VBASE);
+		kprintf("mapping initrd_cp to 0x%08x\n", DISK2_FS_VBASE);
 	}
 #ifdef UCONFIG_SWAP
     if (CHECK_SWAPRD_EXIST()) {
 		boot_map_segment(boot_pgdir, DISK_SWAP_VBASE,
 				 ROUNDUP(swaprd_end - swaprd_begin, PGSIZE),
 				 (uintptr_t) PADDR(swaprd_begin), PTE_W | PTE_R);
-		kprintf("mapping swaprd to 0x%016llx\n", DISK_SWAP_VBASE);
+		kprintf("mapping swaprd to 0x%08x\n", DISK_SWAP_VBASE);
 	}
 #endif
     enable_paging();
@@ -389,7 +387,7 @@ void check_pgdir(void) {
     assert(page_ref(p1) == 1);
 
     ptep = (pte_t *)KADDR(PDE_ADDR(boot_pgdir[0]));
-    ptep = (pte_t *)KADDR(PDE_ADDR(ptep[0])) + 1;
+    ptep = (pte_t *)ptep + 1;
     assert(get_pte(boot_pgdir, PGSIZE, 0) == ptep);
 
     p2 = alloc_page();

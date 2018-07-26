@@ -21,8 +21,8 @@ int apply_relocate_add(struct secthdr *sechdrs,
 		unsigned int i;
 	struct reloc_a_s *rel = (void *)sechdrs[relsec].sh_addr;
 	struct symtab_s *sym;
-	uint64_t *location;
-	uint64_t o_val, hi, lo;
+	uint32_t *location;
+	uint32_t o_val, hi, lo;
 
 	kprintf("Applying relocate section %u to %u\n", relsec,
 			sechdrs[relsec].sh_info);
@@ -36,9 +36,9 @@ int apply_relocate_add(struct secthdr *sechdrs,
 		/* This is the symbol it is referring to.  Note that all
 		   undefined symbols have been resolved.  */
 		sym = (struct symtab_s *)sechdrs[symindex].sh_addr + GET_RELOC_SYM(rel[i].r_info);
-		uint64_t val = sym->st_value + rel[i].r_addend;
+		uint32_t val = sym->st_value + rel[i].r_addend;
 		// kprintf("VAL = %016lx ", val);
-		uint64_t tmp;
+		uint32_t tmp;
 
 		switch (GET_RELOC_TYPE(rel[i].r_info))
 		{

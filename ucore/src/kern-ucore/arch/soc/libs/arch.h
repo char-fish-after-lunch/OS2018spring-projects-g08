@@ -178,7 +178,7 @@
 #define CLINT_BASE         0x02000000
 #define CLINT_SIZE         0x000c0000
 #define EXT_IO_BASE        0x40000000
-#define DRAM_BASE          0xC0000000
+#define DRAM_BASE          0x00000000
 
 // page table entry (PTE) fields
 #define PTE_V     0x001 // Valid
@@ -250,7 +250,7 @@
 
 static inline void
 lcr3(unsigned long cr3) {
-    write_csr(satp, 0x8000000000000000 | (cr3 >> RISCV_PGSHIFT));
+    write_csr(satp, 0x80000000 | (cr3 >> RISCV_PGSHIFT));
 }
 
 #endif
