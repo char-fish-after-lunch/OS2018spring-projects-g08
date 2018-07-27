@@ -57,58 +57,58 @@ bool trap_in_kernel(struct trapframe *tf) {
 
 void print_trapframe(struct trapframe *tf) {
     kprintf("trapframe at %p\n", tf);
-    kprintf("  status   0x%016lx\n", tf->status);
-    kprintf("  epc      0x%016lx\n", tf->epc);
-    kprintf("  badvaddr 0x%016lx\n", tf->badvaddr);
-    kprintf("  cause    0x%016lx\n", tf->cause);
+    kprintf("  status   0x%08x\n", tf->status);
+    kprintf("  epc      0x%08x\n", tf->epc);
+    kprintf("  badvaddr 0x%08x\n", tf->badvaddr);
+    kprintf("  cause    0x%08x\n", tf->cause);
     print_stackframe();
     print_regs(&tf->gpr);
 }
 
 void print_regs(struct pushregs *gpr) {
-    kprintf("  zero     0x%016lx\n", gpr->zero);
-    kprintf("  ra       0x%016lx\n", gpr->ra);
-    kprintf("  sp       0x%016lx\n", gpr->sp);
-    kprintf("  gp       0x%016lx\n", gpr->gp);
-    kprintf("  tp       0x%016lx\n", gpr->tp);
-    kprintf("  t0       0x%016lx\n", gpr->t0);
-    kprintf("  t1       0x%016lx\n", gpr->t1);
-    kprintf("  t2       0x%016lx\n", gpr->t2);
-    kprintf("  s0       0x%016lx\n", gpr->s0);
-    kprintf("  s1       0x%016lx\n", gpr->s1);
-    kprintf("  a0       0x%016lx\n", gpr->a0);
-    kprintf("  a1       0x%016lx\n", gpr->a1);
-    kprintf("  a2       0x%016lx\n", gpr->a2);
-    kprintf("  a3       0x%016lx\n", gpr->a3);
-    kprintf("  a4       0x%016lx\n", gpr->a4);
-    kprintf("  a5       0x%016lx\n", gpr->a5);
-    kprintf("  a6       0x%016lx\n", gpr->a6);
-    kprintf("  a7       0x%016lx\n", gpr->a7);
-    kprintf("  s2       0x%016lx\n", gpr->s2);
-    kprintf("  s3       0x%016lx\n", gpr->s3);
-    kprintf("  s4       0x%016lx\n", gpr->s4);
-    kprintf("  s5       0x%016lx\n", gpr->s5);
-    kprintf("  s6       0x%016lx\n", gpr->s6);
-    kprintf("  s7       0x%016lx\n", gpr->s7);
-    kprintf("  s8       0x%016lx\n", gpr->s8);
-    kprintf("  s9       0x%016lx\n", gpr->s9);
-    kprintf("  s10      0x%016lx\n", gpr->s10);
-    kprintf("  s11      0x%016lx\n", gpr->s11);
-    kprintf("  t3       0x%016lx\n", gpr->t3);
-    kprintf("  t4       0x%016lx\n", gpr->t4);
-    kprintf("  t5       0x%016lx\n", gpr->t5);
-    kprintf("  t6       0x%016lx\n", gpr->t6);
+    kprintf("  zero     0x%08x\n", gpr->zero);
+    kprintf("  ra       0x%08x\n", gpr->ra);
+    kprintf("  sp       0x%08x\n", gpr->sp);
+    kprintf("  gp       0x%08x\n", gpr->gp);
+    kprintf("  tp       0x%08x\n", gpr->tp);
+    kprintf("  t0       0x%08x\n", gpr->t0);
+    kprintf("  t1       0x%08x\n", gpr->t1);
+    kprintf("  t2       0x%08x\n", gpr->t2);
+    kprintf("  s0       0x%08x\n", gpr->s0);
+    kprintf("  s1       0x%08x\n", gpr->s1);
+    kprintf("  a0       0x%08x\n", gpr->a0);
+    kprintf("  a1       0x%08x\n", gpr->a1);
+    kprintf("  a2       0x%08x\n", gpr->a2);
+    kprintf("  a3       0x%08x\n", gpr->a3);
+    kprintf("  a4       0x%08x\n", gpr->a4);
+    kprintf("  a5       0x%08x\n", gpr->a5);
+    kprintf("  a6       0x%08x\n", gpr->a6);
+    kprintf("  a7       0x%08x\n", gpr->a7);
+    kprintf("  s2       0x%08x\n", gpr->s2);
+    kprintf("  s3       0x%08x\n", gpr->s3);
+    kprintf("  s4       0x%08x\n", gpr->s4);
+    kprintf("  s5       0x%08x\n", gpr->s5);
+    kprintf("  s6       0x%08x\n", gpr->s6);
+    kprintf("  s7       0x%08x\n", gpr->s7);
+    kprintf("  s8       0x%08x\n", gpr->s8);
+    kprintf("  s9       0x%08x\n", gpr->s9);
+    kprintf("  s10      0x%08x\n", gpr->s10);
+    kprintf("  s11      0x%08x\n", gpr->s11);
+    kprintf("  t3       0x%08x\n", gpr->t3);
+    kprintf("  t4       0x%08x\n", gpr->t4);
+    kprintf("  t5       0x%08x\n", gpr->t5);
+    kprintf("  t6       0x%08x\n", gpr->t6);
 }
 
 static inline void print_pgfault(struct trapframe *tf) {
     // The page fault test is in kernel anyway, so print a 'K/' here
-    kprintf("page falut at 0x%016lx: K/", tf->badvaddr);
+    kprintf("page fault at 0x%08x: K/", tf->badvaddr);
     if (tf->cause == CAUSE_LOAD_PAGE_FAULT) {
         kprintf("R\n");
     } else if (tf->cause == CAUSE_STORE_PAGE_FAULT) {
         kprintf("W\n");
     } else {
-        kprintf("0x%016lx\n", tf->cause);
+        kprintf("0x%08x\n", tf->cause);
     }
 }
 
@@ -245,6 +245,8 @@ void exception_handler(struct trapframe *tf) {
             break;
         case CAUSE_USER_ECALL:
             // kprintf("Environment call from U-mode\n");
+            // kprintf("%08x %08x %d\n", (uintptr_t)tf, tf->epc, current->pid);
+
             tf->epc += 4;
             syscall();
             break;
@@ -258,6 +260,7 @@ void exception_handler(struct trapframe *tf) {
             tf->epc += 4;
             break;
         case CAUSE_MACHINE_ECALL:
+            // kprintf("%08x %08x %d\n", (uintptr_t)tf, tf->epc, current->pid);
             tf->epc += 4;
             syscall();
             break;
@@ -317,10 +320,26 @@ static inline void trap_dispatch(struct trapframe* tf) {
 void
 trap(struct trapframe *tf) {
     // dispatch based on what type of trap has occurred
+
+    // if(!((tf->epc < KERNBASE && !trap_in_kernel(tf)) || 
+    //     (tf->epc >= KERNBASE && trap_in_kernel(tf)))){
+    //     print_trapframe(tf);
+    //     while(1);
+    // }
+    // if(tf->epc >= 0xc00801cc && tf->epc <= 0xc0080280){
+    //     kprintf("Trap in trapret\n");
+    //     print_trapframe(tf);
+    //     while(1);
+    // }
+    // if(tf->epc >= 0xc0080114 && tf->epc <= 0xc00801c8){
+    //     kprintf("Trap in alltraps\n");
+    //     print_trapframe(tf);
+    //     while(1);       
+    // }
+
     if (current == NULL) {
         trap_dispatch(tf);
     } else {
-        print_trapframe(tf);
         struct trapframe *otf = current->tf;
         current->tf = tf;
 
@@ -339,6 +358,24 @@ trap(struct trapframe *tf) {
     }
 }
 
+
+void check_trapframe(struct trapframe* tf){
+    if(!((tf->epc < KERNBASE && !trap_in_kernel(tf)) || 
+        (tf->epc >= KERNBASE && trap_in_kernel(tf)))){
+        kprintf("check trapframe exception!\n");
+        kprintf("EPC = %08x, STATUS = %08x\n", tf->epc, tf->status);
+        while(1);
+    }
+}
+
+void check_mstatus(uint32_t mstatus, uintptr_t mepc){
+    if(!((mepc < KERNBASE && !(mstatus & MSTATUS_MPP) != 0) || 
+        (mepc >= KERNBASE && (mstatus & MSTATUS_MPP) != 0))){
+        kprintf("check mstatus exception!\n");
+        kprintf("EPC = %08x, STATUS = %08x\n", mepc, mstatus);
+        while(1);
+    }
+}
 
 int ucore_in_interrupt()
 {

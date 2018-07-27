@@ -84,6 +84,10 @@ _restore_context:
     csrw mstatus, s1
     csrw mepc, s2
 
+    # move a0, s1
+    # move a1, s2
+    # call check_mstatus
+
     # restore x registers
     LOAD x1, 1*REGBYTES(sp)
     LOAD x3, 3*REGBYTES(sp)
@@ -129,6 +133,9 @@ __alltraps:
 
     .globl __trapret
 __trapret:
+    # move a0, sp
+    # call check_trapframe
+
     RESTORE_ALL
     # return from supervisor call
     mret

@@ -141,7 +141,6 @@ static inline void sched_class_enqueue_after_wakeup(struct proc_struct *proc)
 		}
 
         // spinlock_acquire(&(cpus[findRQ(rq)]).rqueue_lock);
-		kprintf("gg");
 		sched_class->enqueue(rq, proc);
         // spinlock_release(&(cpus[findRQ(rq)]).rqueue_lock);
 
@@ -332,8 +331,10 @@ void schedule(void)
             if (next != NULL){
                 sched_class_dequeue(next);
             }
-            else
-                next = idleproc;
+            else if(current->state == PROC_RUNNABLE)
+				next = current;
+			else
+				next = idleproc;
 
         }
         // spinlock_release(&mycpu()->rqueue_lock);
@@ -341,7 +342,7 @@ void schedule(void)
         next->runs++;
 		// spinlock_release(&stupid_lock);
 		if (next != current){
-			kprintf("%s, %d\n", next->name, next->pid);
+			// kprintf("%s, %d\n", next->name, next->pid);
 			proc_run(next);
 		}
 	}

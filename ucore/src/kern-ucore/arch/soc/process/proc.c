@@ -117,8 +117,11 @@ init_new_context(struct proc_struct *proc, struct elfhdr *elf,
 	uintptr_t stacktop = USTACKTOP - argc * PGSIZE;
 	char **uargv = (char **)(stacktop - argc * sizeof(char *));
 	int i;
+	// kprintf("Proc %s: %d\n", proc->name, argc);
 	for (i = 0; i < argc; i++) {
 		uargv[i] = strcpy((char *)(stacktop + i * PGSIZE), kargv[i]);
+		// kprintf("- %d: %s\n", i, uargv[i]);
+		
 	}
 	stacktop = (uintptr_t) uargv - sizeof(uintptr_t);
 	*(uintptr_t *)stacktop = argc;

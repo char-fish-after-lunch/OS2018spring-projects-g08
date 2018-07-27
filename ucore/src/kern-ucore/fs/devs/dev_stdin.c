@@ -28,9 +28,7 @@ void dev_stdin_write(char c)
 			if (p_wpos - p_rpos < STDIN_BUFSIZE) {
 				p_wpos++;
 			}
-			kprintf("HAHA %c\n", c);
 			if (!wait_queue_empty(wait_queue)) {
-				kprintf("wake up!\n");
 				wakeup_queue(wait_queue, WT_KBD, 1);
 			}
 		}
@@ -40,7 +38,6 @@ void dev_stdin_write(char c)
 
 static int dev_stdin_read(char *buf, size_t len)
 {
-	kprintf("dev READ\n");
 	int ret = 0;
 	bool intr_flag;
 	local_intr_save(intr_flag);
@@ -59,7 +56,6 @@ try_again:
 				if (p_rpos >= p_wpos)
 					break;
 			} else {
-				kprintf("GO TO SLEEP now.\n");
 				wait_t __wait, *wait = &__wait;
 				wait_current_set(wait_queue, wait, WT_KBD);
 				local_intr_restore(intr_flag);
@@ -67,7 +63,6 @@ try_again:
 				schedule();
 
 				local_intr_save(intr_flag);
-				kprintf("I wake up!\n");
 				wait_current_del(wait_queue, wait);
 				if (wait->wakeup_flags == WT_KBD) {
 					goto try_again;

@@ -394,90 +394,57 @@ void exit_range(pgd_t * pgdir, uintptr_t start, uintptr_t end)
 	exit_range_pgd(pgdir, start, end);
 }
 
-/* ucore use copy-on-write when forking a new process,
- * thus copy_range only copy pdt/pte and set their permission to 
- * READONLY, a write will be handled in pgfault
+
+/* copy_range - copy content of memory (start, end) of one process A to another process B
+ * @to:    the addr of process B's Page Directory
+ * @from:  the addr of process A's Page Directory
+ * @share: flags to indicate to dup OR share. We just use dup method, so it didn't be used.
+ *
+ * CALL GRAPH: copy_mm-->dup_mmap-->copy_range
  */
 int
-copy_range(pgd_t * to, pgd_t * from, uintptr_t start, uintptr_t end, bool share)
-{
-	assert(start % PGSIZE == 0 && end % PGSIZE == 0);
-	assert(USER_ACCESS(start, end));
-
-	do {
-		pte_t *ptep = get_pte(from, start, 0), *nptep;
-		if (ptep == NULL) {
-			if (get_pud(from, start, 0) == NULL) {
-				start = ROUNDDOWN(start + PUSIZE, PUSIZE);
-			} else if (get_pmd(from, start, 0) == NULL) {
-				start = ROUNDDOWN(start + PMSIZE, PMSIZE);
-			} else {
-				start = ROUNDDOWN(start + PTSIZE, PTSIZE);
-			}
-			continue;
-		}
-		if (*ptep != 0) {
+copy_range(pte_t *to, pte_t *from, uintptr_t start, uintptr_t end, bool share) {
+    assert(start % PGSIZE == 0 && end % PGSIZE == 0);
+    assert(USER_ACCESS(start, end));
+    // copy content by page unit.
+    do {
+        //call get_pte to find process A's pte according to the addr start
+        pte_t *ptep = get_pte(from, start, 0), *nptep;
+        if (ptep == NULL) {
+            start = ROUNDDOWN(start + PTSIZE, PTSIZE);
+            continue ;
+        }
+        //call get_pte to find process B's pte according to the addr start. If pte is NULL, just alloc a PT
+        if (*ptep & PTE_P) {
 			if ((nptep = get_pte(to, start, 1)) == NULL) {
 				return -E_NO_MEM;
 			}
-			int ret;
-			//kprintf("%08x %08x %08x\n", nptep, *nptep, start);
-			assert(*ptep != 0 && *nptep == 0);
-#ifdef ARCH_ARM
-			//TODO  add code to handle swap 
-			if (ptep_present(ptep)) {
-				//no body should be able to write this page
-				//before a W-pgfault
-				pte_perm_t perm = PTE_P;
-				if (ptep_u_read(ptep))
-					perm |= PTE_U;
-				if (!share) {
-					//Original page should be set to readonly!
-					//because Copy-on-write may happen
-					//after the current proccess modifies its page
-					ptep_set_perm(ptep, perm);
-				} else {
-					if (ptep_u_write(ptep)) {
-						perm |= PTE_W;
-					}
-				}
-				struct Page *page = pte2page(*ptep);
-				ret = page_insert(to, page, start, perm);
+			uint32_t perm = (*ptep & PTE_USER);
+			struct Page *page = pte2page(*ptep);
+			assert(page!=NULL);
 
-			}
-#else /* ARCH_ARM */
-			if (ptep_present(ptep)) {
-				pte_perm_t perm = ptep_get_perm(ptep, PTE_USER);
-				struct Page *page = pte2page(*ptep);
-				if (!share && ptep_s_write(ptep)) {
-					ptep_unset_s_write(&perm);
-					pte_perm_t perm_with_swap_stat =
-					    ptep_get_perm(ptep, PTE_SWAP);
-					ptep_set_perm(&perm_with_swap_stat,
-						      perm);
-					page_insert(from, page, start,
-						    perm_with_swap_stat);
-				}
-				ret = page_insert(to, page, start, perm);
+			if(share){
+				int ret = page_insert(to, page, start, perm);
+				assert(ret == 0);
+			} else{
+				//get page from ptep
+				// alloc a page for process B
+				struct Page *npage=alloc_page();
+				assert(npage!=NULL);
+				int ret=0;
+				void * kva_src = page2kva(page);
+				void * kva_dst = page2kva(npage);
+			
+				memcpy(kva_dst, kva_src, PGSIZE);
+
+				ret = page_insert(to, npage, start, perm);
 				assert(ret == 0);
 			}
-#endif /* ARCH_ARM */
-			else {
-#ifndef UCONFIG_SWAP
-				assert(0);
-#endif
-				swap_entry_t entry;
-				ptep_copy(&entry, ptep);
-				swap_duplicate(entry);
-				ptep_copy(nptep, &entry);
-			}
-		}
-		start += PGSIZE;
-	} while (start != 0 && start < end);
-#ifdef ARCH_ARM
-	/* we have modified the PTE of the original
-	 * process, so invalidate TLB */
-	tlb_invalidate_all();
-#endif
-	return 0;
+        }
+        start += PGSIZE;
+    } while (start != 0 && start < end);
+    return 0;
 }
+
+
+

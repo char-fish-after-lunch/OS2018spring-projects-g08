@@ -113,7 +113,6 @@ wakeup_wait(wait_queue_t * queue, wait_t * wait, uint32_t wakeup_flags,
 	if (del) {
 		wait_queue_del(queue, wait);
 	}
-	kprintf("wake %d, %s\n", wait->proc->pid, wait->proc->name);
 	// spinlock_acquire(&wait->lock);
 	wait->wakeup_flags = wakeup_flags;
 	wakeup_proc(wait->proc);
