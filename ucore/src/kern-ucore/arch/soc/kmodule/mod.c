@@ -1,6 +1,7 @@
 #include <elf.h>
 #include <mod.h>
 #include <bitman.h>
+#include <assert.h>
 
 int apply_relocate(struct secthdr *sechdrs,
 				   const char *strtab,
@@ -18,15 +19,19 @@ int apply_relocate_add(struct secthdr *sechdrs,
 					   unsigned int symindex,
 					   unsigned int relsec, struct module *mod)
 {
-		unsigned int i;
-	struct reloc_a_s *rel = (void *)sechdrs[relsec].sh_addr;
+	static_assert(sizeof(struct secthdr) == 0x28);
+	static_assert(sizeof(struct symtab_s) == 16);
+	static_assert(sizeof(struct reloc_a_s) == 12);
+
+	unsigned int i;
+	struct reloc_a_s *rel = (struct reloc_a_s *)sechdrs[relsec].sh_addr;
 	struct symtab_s *sym;
 	uint32_t *location;
 	uint32_t o_val, hi, lo;
 
 	kprintf("Applying relocate section %u to %u\n", relsec,
 			sechdrs[relsec].sh_info);
-	for (i = 0; i < sechdrs[relsec].sh_size / sizeof(*rel); i++)
+	for (i = 0; i < sechdrs[relsec].sh_size / sizeof(struct reloc_a_s); i++)
 	{
 		/* This is where to make the change */
 		location = (void *)(sechdrs[sechdrs[relsec].sh_info].sh_addr + rel[i].r_offset);
@@ -42,7 +47,7 @@ int apply_relocate_add(struct secthdr *sechdrs,
 
 		switch (GET_RELOC_TYPE(rel[i].r_info))
 		{
-		case R_RISCV_64:
+		case R_RISCV_32:
 			// kprintf(" R_RISCV_64 ");
 			*location = val;
 			break;

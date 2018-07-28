@@ -70,6 +70,7 @@ dkms.conf
 *.bak
 *.new
 *.org
+*.bin
 
 .vscode
 .DS_Store

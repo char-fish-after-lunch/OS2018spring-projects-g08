@@ -1225,7 +1225,6 @@ int do_execve(const char *filename, const char **argv, const char **envp)
 	}
 #endif
 	snprintf(local_name, sizeof(local_name), "<null> %d", current->pid);
-	kprintf("Process %s = %s\n", filename, local_name);
 	int argc = 0, envc = 0;
 	if ((ret = copy_kargv(mm, kargv, argv, EXEC_MAX_ARG_NUM, &argc)) != 0) {
 		unlock_mm(mm);
