@@ -183,11 +183,10 @@ sfatfs_do_mount(struct device *dev, struct fs **fs_store) {
     }
     uint32_t blocks = sfatfs->super.blocks, unused_blocks = 0;
 	uint16_t *tfat;
-	for (tfat = fat; tfat < fat + SFATFS_BLK_NENTRY; tfat ++) {
+	for (tfat = fat; tfat < fat + sfatfs->super.blocks; tfat ++) {
 		if (*tfat == FAT_FREE) unused_blocks ++;
 	}
     assert(unused_blocks == sfatfs->super.unused_blocks);
-
 
     /* and other fields */
     sfatfs->super_dirty = 0;

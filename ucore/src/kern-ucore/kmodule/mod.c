@@ -72,7 +72,6 @@ static const struct kernel_symbol *resolve_symbol(struct secthdr *sechdrs,
 	const unsigned long *crc;
 	sym = find_symbol(name, &owner, &crc, 1);
 	if (sym) {
-		kprintf("\tresolve_symbol: symbol %s found %016lx, %016lx\n", name, sym->value, owner);
 		if (!check_version(sechdrs, versindex, name, mod, crc) ||
 		    !use_module(mod, owner))
 			sym = NULL;
@@ -325,16 +324,14 @@ static bool find_symbol_in_section(const struct symsearch *syms,
 				   void *data)
 {
 	struct find_symbol_arg *fsa = data;
-	kprintf
-	    ("\tfind_symbol_in_section: kernel symbol %s, searching for %s\n",
-	     syms->start[symnum].name, fsa->name);
+	// kprintf
+	//     ("\tfind_symbol_in_section: kernel symbol %s, searching for %s\n",
+	//      syms->start[symnum].name, fsa->name);
 	if (strcmp(syms->start[symnum].name, fsa->name) != 0)
 		return 0;
 	fsa->owner = owner;
 	fsa->crc = symversion(syms->crcs, symnum);
 	fsa->sym = &syms->start[symnum];
-	kprintf("\tfind_symbol_in_section: symbol %s matched\n",
-		syms->start[symnum].name);
 	return 1;
 }
 
@@ -683,17 +680,13 @@ static int simplify_symbols(struct secthdr *sechdrs,
 			break;
 		case SHN_ABS:
 			/* Don't need to do anything */
-			kprintf("simplify_symbols: Absolute symbol: 0x%08lx\n",
-				(long)sym[i].st_value);
 			break;
 		case SHN_UNDEF:
 			ksym =
 			    resolve_symbol(sechdrs, versindex,
 					   strtab + sym[i].st_name, mod);
 			/* Ok if resolved.  */
-			kprintf("----- %016lx\n", ksym);
 			if (ksym) {
-				kprintf("Symbol found %016lx\n", ksym->value);
 				sym[i].st_value = ksym->value;
 				break;
 			}
@@ -714,8 +707,6 @@ static int simplify_symbols(struct secthdr *sechdrs,
 			else
 				secbase = sechdrs[sym[i].st_shndx].sh_addr;
 			sym[i].st_value += secbase;
-			kprintf("simplify_symbols: Shifted symbol: %s, %08x\n",
-				strtab + sym[i].st_name, sym[i].st_value);
 			break;
 		}
 	}
@@ -728,6 +719,9 @@ static __noinline struct module *load_module(void __user * umod,
 					   unsigned long len,
 					   const char __user * uargs)
 {
+	static_assert(sizeof(struct elfhdr) == 52);
+	static_assert(sizeof(struct secthdr) == 0x28);
+
 	struct elfhdr *hdr;
 	struct secthdr *sechdrs;
 	char *secstrings, *args, *modmagic, *strtab = NULL;
@@ -741,14 +735,10 @@ static __noinline struct module *load_module(void __user * umod,
 	long err = 0;
 	void *ptr = NULL;
 
-	kprintf("load_module: umod=%p, len=%lu, uargs=%p\n", umod, len, uargs);
-
 	if (len < sizeof(*hdr))
 		return NULL;
 	if (len > 64 * 1024 * 1024 || (hdr = kmalloc(len)) == NULL) // space to hold the data
 		return NULL;
-
-	kprintf("load_module: copy_from_user\n");
 
 	struct mm_struct *mm = current->mm;
 	lock_mm(mm);
@@ -809,7 +799,6 @@ static __noinline struct module *load_module(void __user * umod,
 	// temp: point mod into copy of data
 	mod = (void *)sechdrs[modindex].sh_addr;
 
-	kprintf("Init %x\n", (unsigned long)(&mod->init)); // ok, before reloc
 	if (symindex == 0) {
 		kprintf("load_module: %s module has no symbols (stripped?).\n",
 			mod->name);
@@ -882,8 +871,9 @@ static __noinline struct module *load_module(void __user * umod,
 	for (i = 0; i < hdr->e_shnum; i++) {
 		void *dest;
 		if (!(sechdrs[i].sh_flags & SHF_ALLOC)) {
-			kprintf("\tSkipped %s\n",
-				secstrings + sechdrs[i].sh_name);
+			kprintf("\tSkipped %s, %08x\n",
+				secstrings + sechdrs[i].sh_name,
+				sechdrs[i].sh_addr);
 			continue;
 		}
 		if (sechdrs[i].sh_entsize & INIT_OFFSET_MASK)
@@ -901,7 +891,6 @@ static __noinline struct module *load_module(void __user * umod,
 	}
 	/* Module has been moved. */
 	mod = (void *)sechdrs[modindex].sh_addr;
-	kprintf("Exit (after migration) %x\n", (unsigned long)(&mod->exit)); // ok, before reloc
 
 	/* Now we've moved module, initialize linked lists, etc. */
 	module_unload_init(mod);
@@ -944,8 +933,6 @@ static __noinline struct module *load_module(void __user * umod,
 		if (err < 0)
 			goto cleanup;
 	}
-
-	kprintf("INIT : %016lx, EXIT : %016lx\n", mod->init, mod->exit);
 
 	err = verify_export_symbols(mod);
 	if (err < 0)
@@ -992,24 +979,16 @@ int do_init_module(void __user * umod, unsigned long len,
 	struct module *mod;
 	int ret = 0;
 
-	kprintf("kprintf %016lx\n", kprintf);
-	kprintf("vkprintf %016lx\n", vkprintf);
-
 	// TODO: non-preemptive kernel does not need to lock module mutex
 
 	mod = load_module(umod, len, uargs);
-	kprintf("Init %x\n", (unsigned long)(&mod->init)); // after reloc
 	if (mod == NULL) {
 		// TODO: non-preemptive kernel does not need to unlock module mutex
 		return -1;
 	}
 	// TODO: non-preemptive kernel does not need to unlock module mutex
 
-	kprintf("Loading finished!\n");
-
 	if (mod->init != NULL){
-		kprintf("About to run the module initialization procedure.\n");
-		kprintf("Entry point: %x\n", (unsigned long)mod->init);
 		ret = (*mod->init) ();
 	}
 	if (ret < 0) {

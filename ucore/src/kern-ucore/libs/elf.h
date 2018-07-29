@@ -311,8 +311,6 @@ struct symtab_s {
 
 
 
-#define GET_RELOC_SYM(i) ((i)>>32)
-#define GET_RELOC_TYPE(i) ((i)&0xffffffff)
 #define R_X86_64_NONE           0	/* No reloc */
 #define R_X86_64_64             1	/* Direct 64 bit  */
 #define R_X86_64_PC32           2	/* PC relative 32 bit signed */

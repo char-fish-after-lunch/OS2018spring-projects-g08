@@ -10,7 +10,7 @@
 #define CHAR_BIT        8
 
 /* Represents true-or-false values */
-#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
+#if defined(ARCH_RISCV64)
 typedef long long bool;
 #else
 typedef int bool;
