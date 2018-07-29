@@ -67,6 +67,18 @@ int cputs(const char *str)
 	return cnt;
 }
 
+/* *
+ * getchar- get char from stdio
+ * */
+int getchar()
+{
+    char c;
+    if (read(0, &c, sizeof(char)) < 0){
+        return 0;
+    }
+    return c;
+}
+
 static void fputch(char c, int *cnt, int fd)
 {
 	write(fd, &c, sizeof(char));

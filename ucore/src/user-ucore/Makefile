@@ -15,7 +15,8 @@ BIN := $(USER_OBJ_ROOT)/bin
 TESTBIN := $(USER_OBJ_ROOT)/testbin
 INITIAL_DIR := _initial
 
-USER_APPLIST:= pwd cat sh ls cp echo link mkdir rename unlink lsmod insmod rmmod mount umount halt
+USER_APPLIST:= pwd cat sh ls cp echo link mkdir rename unlink lsmod insmod rmmod mount umount halt t1 fibonacci blackjack math
+
 #ifneq ($(UCORE_TEST),)
 USER_TESTLIST := $(basename $(wildcard tests/*.c))
 USER_TESTLIST += $(basename $(wildcard tests/arch/$(ARCH)/*.c))
@@ -43,6 +44,8 @@ $(foreach bdir,$(USER_APPLIST),$(eval $(call make-user-app,$(bdir),$(BIN))))
 $(foreach bdir,$(USER_TESTLIST),$(eval $(call make-user-app,$(bdir),$(TESTBIN))))
 
 $(USER_OBJ_ROOT)/%.o: %.c
+	$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $<
+$(USER_OBJ_ROOT)/%.o: %.s
 	$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $<
 
 $(BIN):

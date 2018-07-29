@@ -36,5 +36,5 @@ void umain(int argc, char **argv)
 		warn("open <stderr> failed: %e.\n", fd);
 	}
 	int ret = main(argc, argv);
-	exit(ret);
+    exit(0);
 }
