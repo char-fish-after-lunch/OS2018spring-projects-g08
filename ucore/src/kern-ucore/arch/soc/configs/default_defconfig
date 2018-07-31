@@ -28,3 +28,5 @@ SFS_IMAGE_SIZE=2
 #
 # Linux Device Driver Environment
 #
+
+NR_CPUS=2

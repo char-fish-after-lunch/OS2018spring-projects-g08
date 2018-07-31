@@ -1,4 +1,4 @@
-ARCH_CFLAGS := -march=rv32i -DARCH_SOC\
+ARCH_CFLAGS := -march=rv32ia -DARCH_SOC\
 				-mcmodel=medany -std=gnu99 -Wextra\
 				-fno-builtin -Wall -O2 -nostdinc \
 				-fno-stack-protector -ffunction-sections -fdata-sections

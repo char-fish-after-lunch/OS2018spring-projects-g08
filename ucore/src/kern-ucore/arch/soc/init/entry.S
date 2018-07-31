@@ -17,30 +17,33 @@
 
 #define PADDR(x) ((x) - KBASE)
 
+#define ADR_SERIAL_DAT 0b00000000011111111111111111111000
     .section .text,"ax",%progbits
     .globl kern_entry
 kern_entry:
     # only one hart for now
 
     # setup boot pgdir
-    la a2, PADDR(__boot_pgdir)
-    srli a2, a2, 2
-    addi a2, a2, 1024
-    ori a2, a2, PTE_V
+    # la a2, PADDR(__boot_pgdir)
+    # srli a2, a2, 2
+    # addi a2, a2, 1024
+    # ori a2, a2, PTE_V
 
-    la a1, __boot_pgdir + (KBASE >> 20)
-    sw a2, 0(a1)
-    addi a2, a2, 1024
-    sw a2, 4(a1)
+    # la a1, __boot_pgdir + (KBASE >> 20)
+    # sw a2, 0(a1)
+    # addi a2, a2, 1024
+    # sw a2, 4(a1)
 
-    la t0, PADDR(__boot_pgdir)
-    srli t0, t0, RISCV_PGSHIFT
-    li t1, 1 << 31
-    or t0, t0, t1
-    csrw satp, t0
+    # la t0, PADDR(__boot_pgdir)
+    # srli t0, t0, RISCV_PGSHIFT
+    # li t1, 1 << 31
+    # or t0, t0, t1
+    # csrw satp, t0
 
-    addi a0, x0, 0
+    csrr a0, mhartid
     la sp, stack + KSTACKSIZE
+    slli t0, a0, KSTACKSHIFT
+    add sp, sp, t0
 
     tail kern_init
 
