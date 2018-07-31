@@ -18,7 +18,7 @@
 #include <syscall.h>
 #include <error.h>
 
-#define ADR_PLIC 0b11000000011111111111111111110000
+#define ADR_PLIC (0b11000000011111111111111111110000 | (myid() << 2))
 #define IRQ_SERIAL 1
 #define IRQ_KEYBOARD 2
 #define IRQ_NETWORK 3
