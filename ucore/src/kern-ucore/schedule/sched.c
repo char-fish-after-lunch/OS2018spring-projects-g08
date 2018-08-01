@@ -305,7 +305,7 @@ int try_to_wakeup(struct proc_struct *proc)
 
 void schedule(void)
 {
-	kprintf("Scheduling! for cpu %d\n", myid());
+	// kprintf("Scheduling! for cpu %d\n", myid());
 	/* schedule in irq ctx is not allowed */
 	assert(!ucore_in_interrupt());
 	bool intr_flag;

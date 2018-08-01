@@ -46,7 +46,8 @@ static inline int atomic_sub_return(atomic_t * v, int i)
  */
 static inline int atomic_read(const atomic_t *v)
 {
-    return v->counter;
+    return __atomic_load_n((volatile int *)&(v->counter), __ATOMIC_SEQ_CST);
+    // return v->counter;
 }
 
 /**
@@ -58,7 +59,8 @@ static inline int atomic_read(const atomic_t *v)
  */
 static inline void atomic_set(atomic_t *v, int i)
 {
-    v->counter = i;
+    __atomic_store_n((volatile int *)&(v->counter), i, __ATOMIC_SEQ_CST);
+    // v->counter = i;
 }
 
 /**
@@ -70,7 +72,8 @@ static inline void atomic_set(atomic_t *v, int i)
  */
 static inline void atomic_add(atomic_t *v, int i)
 {
-    v->counter += i;
+    __atomic_add_fetch((volatile int *)&(v->counter), i, __ATOMIC_SEQ_CST);
+    // v->counter += i;
 }
 
 /**
@@ -82,7 +85,8 @@ static inline void atomic_add(atomic_t *v, int i)
  */
 static inline void atomic_sub(atomic_t *v, int i)
 {
-    v->counter -= i;
+    __atomic_sub_fetch((volatile int *)&(v->counter), i, __ATOMIC_SEQ_CST);
+    // v->counter -= i;
 }
 
 
@@ -97,7 +101,8 @@ static inline void atomic_sub(atomic_t *v, int i)
  */
 static inline int atomic_sub_and_test(int i, atomic_t *v)
 {
-    int ret = (v->counter -= i);
+    int ret = __atomic_sub_fetch((volatile int *)&(v->counter), i, __ATOMIC_SEQ_CST);
+    // int ret = (v->counter -= i);
     return ret == 0;
 }
 
@@ -149,7 +154,8 @@ static inline bool atomic_dec_test_zero(atomic_t * v)
  */
 static inline bool atomic_inc_test_zero(atomic_t * v)
 {
-    int ret = (++ v->counter);
+    int ret = __atomic_add_fetch((volatile int *)&(v->counter), 1, __ATOMIC_SEQ_CST);
+    // int ret = (++ v->counter);
     return ret == 0;
 }
 
@@ -163,7 +169,8 @@ static inline bool atomic_inc_test_zero(atomic_t * v)
  * */
 static inline int atomic_add_return(atomic_t * v, int i)
 {
-	return v->counter += i;
+	return __atomic_add_fetch((volatile int *)&(v->counter), i, __ATOMIC_SEQ_CST);
+	// return v->counter += i;
 }
 
 /* *
@@ -175,7 +182,8 @@ static inline int atomic_add_return(atomic_t * v, int i)
  * */
 static inline int atomic_sub_return(atomic_t * v, int i)
 {
-	return v->counter -= i;
+	return __atomic_sub_fetch((volatile int *)&(v->counter), i, __ATOMIC_SEQ_CST);
+	// return v->counter -= i;
 }
 
 static inline int atomic_cmpxchg(atomic_t *v, int old, int new)
@@ -192,7 +200,8 @@ static inline int atomic_xchg(atomic_t *v, int new)
     return 0;
 }
 
-#define atomic_compare_and_swap(ptr, oval, nval) ((*((volatile uintptr*)ptr) == (oval)) ? (*(ptr) = (nval), 1) : 0)
+#define atomic_compare_and_swap(ptr, oval, nval) __sync_bool_compare_and_swap(ptr, oval, nval)
+// #define atomic_compare_and_swap(ptr, oval, nval) ((*(ptr) == (oval)) ? (*(ptr) = (nval), 1) : 0)
 
 
 
@@ -222,7 +231,8 @@ static inline bool test_and_clear_bit(int nr, volatile void *addr)
 static inline void set_bit(int nr, volatile void *addr) {
     nr = nr % __riscv_xlen;
     uint32_t mask = 1UL << nr;
-    *((volatile uint32_t *)addr) |= mask;
+    __atomic_fetch_or((volatile uint32_t *)addr, mask, __ATOMIC_SEQ_CST);
+    // *((volatile uint32_t *)addr) |= mask;
 }
 
 /* *
@@ -234,7 +244,8 @@ static inline void clear_bit(int nr, volatile void *addr) {
     nr = nr % __riscv_xlen;
     uint32_t mask = ~(1UL << nr);
 
-    *((volatile uint32_t *)addr) &= mask;
+    __atomic_fetch_and((volatile uint32_t *)addr, mask, __ATOMIC_SEQ_CST);
+    // *((volatile uint32_t *)addr) &= mask;
 }
 
 /* *
@@ -245,7 +256,8 @@ static inline void clear_bit(int nr, volatile void *addr) {
 static inline void change_bit(int nr, volatile void *addr) {
     nr = nr % __riscv_xlen;
     uint32_t mask = 1UL << nr;
-    *((volatile uint32_t *)addr) ^= mask;
+    // *((volatile uint32_t *)addr) ^= mask;
+    __atomic_xor_fetch((volatile uint32_t *)addr, mask, __ATOMIC_SEQ_CST);
 }
 
 /* *
@@ -256,7 +268,8 @@ static inline void change_bit(int nr, volatile void *addr) {
 static inline bool test_bit(int nr, volatile void *addr) {
     nr = nr % __riscv_xlen;
     uint32_t mask = 1UL << nr;
-    uint32_t ret = *((volatile uint32_t *)addr) & mask;
+    uint32_t ret = __atomic_xor_fetch((volatile uint32_t *)addr, 0, __ATOMIC_SEQ_CST) & mask;
+    // uint32_t ret = *((volatile uint32_t *)addr) & mask;
     return ret != 0;
 }
 
@@ -268,8 +281,9 @@ static inline bool test_bit(int nr, volatile void *addr) {
 static inline bool test_and_set_bit(int nr, volatile void *addr) {
     nr = nr % __riscv_xlen;
     uint32_t mask = 1UL << nr;
-    uint32_t old = *((volatile uint32_t *)addr) & mask;
-    *((volatile uint32_t *)addr) |= mask;
+    uint32_t old = __atomic_fetch_or((volatile uint32_t *)addr, mask, __ATOMIC_SEQ_CST) & mask;
+    // uint32_t old = *((volatile uint32_t *)addr) & mask;
+    // *((volatile uint32_t *)addr) |= mask;
     return old != 0;
 }
 
@@ -281,8 +295,9 @@ static inline bool test_and_set_bit(int nr, volatile void *addr) {
 static inline bool test_and_clear_bit(int nr, volatile void *addr) {
     nr = nr % __riscv_xlen;
     uint32_t mask = (1UL << nr);
-    uint32_t old = *((volatile uint32_t *)addr) & mask;
-    *((volatile uint32_t *)addr) &= ~mask;
+    uint32_t old = __atomic_fetch_and((volatile uint32_t *)addr, mask, __ATOMIC_SEQ_CST) & mask;
+    // uint32_t old = *((volatile uint32_t *)addr) & mask;
+    // *((volatile uint32_t *)addr) &= ~mask;
 
     return old != 0;
 }
