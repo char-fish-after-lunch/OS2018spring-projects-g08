@@ -83,10 +83,13 @@ static void
 	spin_lock_irqsave(&sem->lock, intr_flag);
 	{
 		wait_t *wait;
+		spinlock_acquire(&(sem->wait_queue.lock));
 		if ((wait = wait_queue_first(&(sem->wait_queue))) == NULL) {
+			spinlock_release(&(sem->wait_queue.lock));
 			sem->value++;
 		} else {
 			assert(wait->proc->wait_state == wait_state);
+			spinlock_release(&(sem->wait_queue.lock));
 			wakeup_wait(&(sem->wait_queue), wait, wait_state, 1);
 		}
 	}

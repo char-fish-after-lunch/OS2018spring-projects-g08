@@ -18,6 +18,8 @@ static void cputch(int c, int *cnt, int fd)
 	(*cnt)++;
 }
 
+static spinlock_s kprintf_lock;
+
 // static spinlock_s kprintf_lock = { 0 };
 
 /* *
@@ -33,16 +35,14 @@ int vkprintf(const char *fmt, va_list ap)
 {
 	int cnt = 0;
 	int flag;
-	//local_intr_save_hw(flag);
-	//spinlock_acquire(&kprintf_lock);
+	local_intr_save(flag);
+	spinlock_acquire(&kprintf_lock);
 	vprintfmt((void *)cputch, NO_FD, &cnt, fmt, ap);
-	//spinlock_release(&kprintf_lock);
-	//local_intr_restore_hw(flag);
+	spinlock_release(&kprintf_lock);
+	local_intr_restore(flag);
 
 	return cnt;
 }
-
-static spinlock_s kprintf_lock;
 
 void kio_init(){
 	kprintf_lock.lock = 0;
@@ -56,13 +56,13 @@ void kio_init(){
  * */
 int kprintf(const char *fmt, ...)
 {
-	spinlock_acquire(&kprintf_lock);
+	// spinlock_acquire(&kprintf_lock);
 	va_list ap;
 	int cnt;
 	va_start(ap, fmt);
 	cnt = vkprintf(fmt, ap);
 	va_end(ap);
-	spinlock_release(&kprintf_lock);
+	// spinlock_release(&kprintf_lock);
 	
 
 	return cnt;

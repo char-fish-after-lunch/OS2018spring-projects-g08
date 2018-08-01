@@ -24,11 +24,12 @@
 int kern_init(uintptr_t hartid) __attribute__((noreturn));
 void grade_backtrace(void);
 static void lab1_switch_test(void);
-static volatile int bsp_started;
+static volatile int bsp_started = 0;
 
 extern struct cpu cpus[];
 
 static void ap_init(uintptr_t hartid){
+    kprintf("AP %d init\n", myid());
     load_pgdir(NULL);
     intr_enable();  // enable irq interrupt
 
@@ -40,7 +41,9 @@ static void ap_init(uintptr_t hartid){
     kprintf("AP %d has started.\n", myid());
 
     clock_init();  // init clock interrupt
+    kprintf("clock in %d is enabled.\n", myid());
     intr_enable();
+    kprintf("intr in %d is enabled.\n", myid());
 
     cpu_idle();                 // run idle process    
 }
@@ -56,27 +59,33 @@ static void start_others(){
 }
 
 int kern_init(uintptr_t hartid) {
-    asm volatile ("addi tp, %0, 0;" : : "r"(cpus + hartid));
+
+    if (hartid == 0) {
+        extern char edata[], end[];
+        memset(edata, 0, end - edata);
+        kio_init();
+        kprintf("bsp_started: %d\n", bsp_started);
+    }
+    
+    asm volatile ("mv tp, %0;" : : "r"(cpus + hartid));
+    if (hartid != 0) {
+        bsp_started = 0;
+        // wait for bsp to do init work
+        while(!bsp_started);
+        kprintf("bsp_started: %d\n", bsp_started);
+        ap_init(hartid); // not expected to return
+    }
+
     smp_init();
 
 
-    extern char edata[], end[];
-    memset(edata, 0, end - edata);
-
-
-    // kio_init();
-
-
     const char *message = "(THU.CST) os is loading ...\n";
-    kprintf("%s\n\n", message);
+    kprintf("%d-%s\n\n", hartid, message);
+    // kprintf("%s\n\n", message);
 
     print_kerninfo();
 
-    if(hartid != 0){
-        // wait for bsp to do init work
-        while(!bsp_started);
-        ap_init(hartid); // not expected to return
-    }
+
 
 	size_t nr_used_pages_store = nr_used_pages();
 
@@ -98,13 +107,16 @@ int kern_init(uintptr_t hartid) {
     ide_init();                 // init ide devices
     start_others();
 
+    kprintf("%d-start others\n\n", hartid);
 
 #ifdef UCONFIG_SWAP
 	swap_init();		// init swap
 #endif
     fs_init();
+    kprintf("%d-fs init\n\n", hartid);
     // rdtime in mbare mode crashes
     clock_init();  // init clock interrupt
+    kprintf("%d-clk init\n\n", hartid);
     mod_init();
 
 

@@ -85,6 +85,7 @@ int vfs_chdir(char *path)
 	int ret;
 	struct inode *node;
 	if ((ret = vfs_lookup(path, &node)) == 0) {
+		kprintf("vfs lookup passed\n");
 		ret = vfs_set_curdir(node);
 		vop_ref_dec(node);
 	}

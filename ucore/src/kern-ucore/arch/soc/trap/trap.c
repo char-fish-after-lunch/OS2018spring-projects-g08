@@ -198,14 +198,16 @@ void interrupt_handler(struct trapframe *tf) {
             kprintf("Hypervisor external interrupt\n");
             break;
         case IRQ_M_EXT:
-            irq_source = *((uint32_t*)ADR_PLIC);
-            switch(irq_source){
-                case IRQ_SERIAL:
-                    dev_stdin_write(cons_getc());
-                    break;
+            if (myid() == 0) {
+                irq_source = *((uint32_t*)ADR_PLIC);
+                switch(irq_source){
+                    case IRQ_SERIAL:
+                        dev_stdin_write(cons_getc());
+                        break;
+                }
+                
+                *((uint32_t*)ADR_PLIC) = irq_source;
             }
-            
-            *((uint32_t*)ADR_PLIC) = irq_source;
             break;
         default:
             print_trapframe(tf);

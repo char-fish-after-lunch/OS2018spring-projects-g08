@@ -87,9 +87,11 @@ int vfs_set_bootfs(char *fsname)
 		}
 		int ret;
 		if ((ret = vfs_chdir(fsname)) != 0) {
+			kprintf("ret vfs_chdir %s, %d\n", fsname, ret);
 			return ret;
 		}
 		if ((ret = vfs_get_curdir(&node)) != 0) {
+			kprintf("ret vfs_get_curdir %s, %d\n", fsname, ret);
 			return ret;
 		}
 	}

@@ -140,6 +140,7 @@ init_new_context(struct proc_struct *proc, struct elfhdr *elf,
 // cpu_idle - at the end of kern_init, the first kernel thread idleproc will do below works
 void cpu_idle(void)
 {
+	kprintf("cpuid %d entering cpu_idle\n", myid());
 	// while (1) {
 	// 	assert((read_rflags() & FL_IF) != 0);
 	// 	asm volatile ("hlt");

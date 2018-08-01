@@ -44,7 +44,6 @@ static inline int min(int a, int b) {
 
 static inline void load_balance()
 {
-	#ifndef ARCH_SOC
     for (int i = 0; i < NCPU; ++i) {
         spinlock_acquire(&cpus[i].rqueue_lock);
     }
@@ -53,12 +52,12 @@ static inline void load_balance()
 	#else
 	int lcpu_count = sysconf.lcpu_count;
 	#endif
-    double load_sum = 0, load_max = -1, my_load = 0;
+    int load_sum = 0, load_max = -1, my_load = 0;
     int max_id = 0;
     
    
     for (int i = 0; i < lcpu_count; ++i) {
-        double load = sched_class->get_load(&(cpus[i].rqueue));
+        int load = (&(cpus[i].rqueue)) -> proc_num;
         load_sum += load;
         if (load > load_max) {
             load_max = load;
@@ -68,12 +67,12 @@ static inline void load_balance()
     load_sum /= lcpu_count;
     
     {
-        load_max = sched_class->get_load(&cpus[max_id].rqueue);
-        my_load = sched_class->get_load(&cpus[myid()].rqueue);
+        load_max = (&cpus[max_id].rqueue) -> proc_num;
+        my_load = (&cpus[myid()].rqueue) -> proc_num;
         int needs = min((int)(load_max - load_sum), (int)(load_sum - my_load));
         needs = min(needs, MAX_MOVE_PROC_NUM);
         if (needs > 3 && myid() != max_id) {
-            //kprintf("===========%d %d %d======\n", myid(), max_id, needs);
+            kprintf("===========%d %d %d======\n", myid(), max_id, needs);
             struct proc_struct* procs_moved[MAX_MOVE_PROC_NUM];//TODO: max proc num in rq
             int num = sched_class->get_proc(&cpus[max_id].rqueue, procs_moved, needs);
             for (int i = 0; i < num; ++i) {
@@ -85,7 +84,6 @@ static inline void load_balance()
     for (int i = NCPU - 1; i >= 0; i--) {
         spinlock_release(&cpus[i].rqueue_lock);
     }
-	#endif
 }
 
 extern findRQ(struct run_queue *rq);
@@ -140,9 +138,9 @@ static inline void sched_class_enqueue_after_wakeup(struct proc_struct *proc)
         	assert(proc->cpu_affinity == findRQ(rq));
 		}
 
-        // spinlock_acquire(&(cpus[findRQ(rq)]).rqueue_lock);
+        spinlock_acquire(&(cpus[findRQ(rq)]).rqueue_lock);
 		sched_class->enqueue(rq, proc);
-        // spinlock_release(&(cpus[findRQ(rq)]).rqueue_lock);
+        spinlock_release(&(cpus[findRQ(rq)]).rqueue_lock);
 
 	}
 }
@@ -237,11 +235,11 @@ void stop_proc(struct proc_struct *proc, uint32_t wait)
 
 void wakeup_proc(struct proc_struct *proc)
 {
-	// spinlock_acquire(&proc->lock);
+	spinlock_acquire(&proc->lock);
 	assert(proc->state != PROC_ZOMBIE);
 	bool intr_flag;
 	local_intr_save(intr_flag);
-	// spinlock_acquire(&stupid_lock);
+	spinlock_acquire(&stupid_lock);
 	{
 		if (proc->state != PROC_RUNNABLE) {
 			// kprintf("W1 %d\n", proc->pid);
@@ -259,9 +257,9 @@ void wakeup_proc(struct proc_struct *proc)
 			warn("wakeup runnable process.\n");
 		}
 	}
-	// spinlock_release(&stupid_lock);
+	spinlock_release(&stupid_lock);
 	local_intr_restore(intr_flag);
-	// spinlock_release(&proc->lock);
+	spinlock_release(&proc->lock);
 }
 
 int try_to_wakeup(struct proc_struct *proc)
@@ -307,14 +305,14 @@ int try_to_wakeup(struct proc_struct *proc)
 
 void schedule(void)
 {
-	// kprintf("Scheduling!\n");
+	kprintf("Scheduling! for cpu %d\n", myid());
 	/* schedule in irq ctx is not allowed */
 	assert(!ucore_in_interrupt());
 	bool intr_flag;
 	struct proc_struct *next;
 
 	local_intr_save(intr_flag);
-	// spinlock_acquire(&stupid_lock);
+	spinlock_acquire(&stupid_lock);
 
 	#if defined(ARCH_RISCV64) || defined(ARCH_SOC)
 	int lcpu_count = NCPU;
@@ -325,7 +323,7 @@ void schedule(void)
 		current->need_resched = 0;
 		load_balance();
 
-        // spinlock_acquire(&mycpu()->rqueue_lock);
+        spinlock_acquire(&mycpu()->rqueue_lock);
         {
             next = sched_class_pick_next();
             if (next != NULL){
@@ -337,11 +335,12 @@ void schedule(void)
 				next = idleproc;
 
         }
-        // spinlock_release(&mycpu()->rqueue_lock);
+        spinlock_release(&mycpu()->rqueue_lock);
 		
         next->runs++;
-		// spinlock_release(&stupid_lock);
+		spinlock_release(&stupid_lock);
 		if (next != current){
+			kprintf("CPUid: %d, PID: %d\n", myid(), next->pid);
 			// kprintf("%s, %d\n", next->name, next->pid);
 			proc_run(next);
 		}
